@@ -83,7 +83,7 @@
 <script>
 (function(){
   "use strict";
-  var ROWS=6, COLS=5, TARGET=10;
+  var ROWS=7, COLS=6, TARGET=10;
   var board=document.getElementById('board');
   var ink=document.getElementById('ink');
   var countEl=document.getElementById('count');
@@ -128,24 +128,24 @@
     return n;
   }
   function makeBoard(){
-    var best=null, bestP=-1;
-    for(var t=0;t<400;t++){
-      var v=[];
-      for(var i=0;i<ROWS*COLS;i++) v.push(1+rnd(9));
-      // ペアを ほどよく うめこむ
-      for(var k=0;k<ROWS*COLS/2;k++){
-        var a=rnd(ROWS*COLS), nb=neighbors(a);
-        if(nb.length && Math.random()<0.5){
-          var b=nb[rnd(nb.length)];
-          var x=1+rnd(9); v[a]=x; v[b]=TARGET-x;
-          if(v[b]<1||v[b]>9){ v[b]=1+rnd(9); }
-        }
-      }
-      var p=countPairs(v);
-      if(p>bestP){ bestP=p; best=v.slice(); }
-      if(p>=8) return v;
+    // ばんめん ぜんたいを「たして10」の ペア（ドミノ）で しきつめる
+    // → こたえが たくさん できる
+    var N=ROWS*COLS;
+    var v=new Array(N).fill(0);
+    var used=new Array(N).fill(false);
+    for(var i=0;i<N;i++){
+      if(used[i]) continue;
+      var r=Math.floor(i/COLS), c=i%COLS;
+      var opts=[];
+      if(c<COLS-1 && !used[i+1]) opts.push(i+1);      // みぎ
+      if(r<ROWS-1 && !used[i+COLS]) opts.push(i+COLS); // した
+      if(opts.length===0){ v[i]=1+rnd(9); used[i]=true; continue; }
+      var j=opts[rnd(opts.length)];
+      var a=1+rnd(9);
+      v[i]=a; v[j]=TARGET-a;      // a と 10-a（どちらも 1〜9）
+      used[i]=used[j]=true;
     }
-    return best;
+    return v;
   }
   function anyPairLeft(){
     for(var i=0;i<vals.length;i++){

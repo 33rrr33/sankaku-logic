@@ -17,7 +17,7 @@
   *{-webkit-tap-highlight-color:transparent;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
     font-family:"BIZ UDPGothic",system-ui,sans-serif;-webkit-text-size-adjust:100%;
-    touch-action:none; overflow-x:hidden;}
+    touch-action:manipulation; overflow-x:hidden;}
   .wrap{max-width:640px;margin:0 auto;padding:14px 14px 40px;}
   header{text-align:center;margin:6px 0 2px;}
   h1{font-size:clamp(30px,9vw,46px);margin:0;letter-spacing:.06em;color:#333;
@@ -32,7 +32,9 @@
     background:var(--accent);border:none;border-radius:16px;padding:10px 18px;cursor:pointer;
     box-shadow:0 4px 0 #4f86b8;transition:transform .05s;}
   .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #4f86b8;}
-  #board{display:grid;gap:clamp(4px,1.4vw,9px);margin:0 auto;max-width:520px;touch-action:none;}
+  #board{display:grid;gap:clamp(4px,1.4vw,9px);margin:0 auto;max-width:520px;}
+  .cell{cursor:pointer;}
+  .cell.seq{background:#ffe9a8;border-color:var(--sel-b);color:#7a5600;}
   .cell{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;
     background:var(--cell);border:3px solid var(--cell-b);border-radius:14px;
     font-size:clamp(24px,8.4vw,42px);font-weight:700;color:#5a4a4a;
@@ -63,12 +65,15 @@
 <div class="wrap">
   <header>
     <h1>ことばさがし</h1>
-    <p class="sub">したの ことばを、たてか よこで さがして なぞろう！</p>
+    <p class="sub">したの ことばを、たてか よこに じゅんばんに おして さがそう！</p>
   </header>
 
   <div class="bar">
     <div class="score">みつけた：<b id="count">0</b> / <span id="total">0</span></div>
-    <button class="btn" id="new">あたらしい もんだい</button>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" id="clear" style="background:#c9a86b;box-shadow:0 4px 0 #a98a4f;">やりなおし</button>
+      <button class="btn" id="new">あたらしい もんだい</button>
+    </div>
   </div>
 
   <div id="board"></div>
@@ -84,7 +89,7 @@
 <script>
 (function(){
   "use strict";
-  var ROWS=6, COLS=6, WANT=5;
+  var ROWS=8, COLS=7, WANT=10, MIN=8;
   // きほんの ひらがな（だくてん・ちいさい かな なし）
   var KANA="あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわ".split("");
   var POOL=[
@@ -95,7 +100,11 @@
     {w:"たこ",e:"🐙"},{w:"みみ",e:"👂"},{w:"のり",e:"🍙"},{w:"ゆき",e:"⛄"},
     {w:"あり",e:"🐜"},{w:"うし",e:"🐮"},{w:"うま",e:"🐴"},{w:"とら",e:"🐯"},
     {w:"さる",e:"🐵"},{w:"くるま",e:"🚗"},{w:"すいか",e:"🍉"},{w:"さかな",e:"🐟"},
-    {w:"はさみ",e:"✂️"},{w:"ひよこ",e:"🐤"},{w:"からす",e:"🐦‍⬛"},{w:"とけい",e:"🕐"}
+    {w:"はさみ",e:"✂️"},{w:"ひよこ",e:"🐤"},{w:"からす",e:"🐦‍⬛"},{w:"とけい",e:"🕐"},
+    {w:"いす",e:"🪑"},{w:"えき",e:"🚉"},{w:"くち",e:"👄"},{w:"かに",e:"🦀"},
+    {w:"こおり",e:"🧊"},{w:"あたま",e:"🧠"},{w:"つくえ",e:"📐"},{w:"えほん",e:"📕"},
+    {w:"にく",e:"🍖"},{w:"こめ",e:"🍚"},{w:"たね",e:"🌱"},{w:"せみ",e:"🦗"},
+    {w:"くも",e:"🕷️"},{w:"ほん",e:"📖"},{w:"かさ",e:"☂️"},{w:"はと",e:"🕊️"}
   ];
 
   var board=document.getElementById('board');
@@ -152,9 +161,9 @@
   }
   function buildData(){
     var placed=[];
-    for(var attempt=0;attempt<40;attempt++){
+    for(var attempt=0;attempt<80;attempt++){
       placed=tryBuild();
-      if(placed.length>=Math.min(WANT,4)) break;
+      if(placed.length>=MIN) break;
     }
     // あきますに ひらがなを うめる
     for(var r=0;r<ROWS;r++) for(var c=0;c<COLS;c++){
@@ -184,43 +193,40 @@
     doneEl.classList.remove('show');
   }
 
-  /* ---- せんたく（ドラッグ） ---- */
-  var dragging=false, startI=-1, path=[];
-  function cellFromPoint(x,y){
-    var el=document.elementFromPoint(x,y);
-    if(el && el.classList && el.classList.contains('cell')) return parseInt(el.dataset.i,10);
-    return -1;
-  }
-  function lineBetween(a,b){
+  /* ---- せんたく（ひとつずつ おす） ---- */
+  var seq=[]; // おした ますの じゅんばん
+  function dirOf(a,b){ // a→b が たて/よこ で となりなら むき、ちがえば null
     var ar=Math.floor(a/COLS), ac2=a%COLS, br=Math.floor(b/COLS), bc=b%COLS;
-    var out=[];
-    if(ar===br){ var s=Math.min(ac2,bc),e=Math.max(ac2,bc); for(var c=s;c<=e;c++) out.push(ar*COLS+c);
-      if(bc<ac2) out.reverse(); return out; }
-    if(ac2===bc){ var s2=Math.min(ar,br),e2=Math.max(ar,br); for(var r=s2;r<=e2;r++) out.push(r*COLS+ac2);
-      if(br<ar) out.reverse(); return out; }
-    return null; // ななめ・とびは むこう
+    var dr=br-ar, dc=bc-ac2;
+    if(dr===0 && Math.abs(dc)===1) return [0,dc];
+    if(dc===0 && Math.abs(dr)===1) return [dr,0];
+    return null;
   }
-  function preview(list){
-    cells.forEach(function(c){ if(!c.classList.contains('found')) c.classList.remove('sel'); });
-    if(list) list.forEach(function(i){ cells[i].classList.add('sel'); });
+  function updateSeqUI(){
+    cells.forEach(function(c){ c.classList.remove('seq'); });
+    seq.forEach(function(i){ cells[i].classList.add('seq'); });
   }
-  function start(x,y){
-    var i=cellFromPoint(x,y); if(i<0) return;
-    ac(); dragging=true; startI=i; path=[i]; preview([i]);
+  function tapCell(i){
+    if(seq.length===0){ seq=[i]; }
+    else {
+      var last=seq[seq.length-1];
+      if(i===last){ seq.pop(); updateSeqUI(); return; }        // もういちど おす＝もどす
+      var d=dirOf(last,i);
+      if(!d){ seq=[i]; }                                        // となりでない＝あたらしく はじめる
+      else if(seq.length===1){ seq.push(i); }                   // むきを きめる
+      else {
+        var pd=dirOf(seq[seq.length-2], last);                  // いままでの むき
+        if(pd && pd[0]===d[0] && pd[1]===d[1]) seq.push(i);     // おなじ むきなら つづける
+        else seq=[i];                                           // むきが かわった＝やりなおし
+      }
+    }
+    updateSeqUI();
+    checkMatch();
   }
-  function move(x,y){
-    if(!dragging) return;
-    var i=cellFromPoint(x,y); if(i<0) return;
-    var line=lineBetween(startI,i);
-    if(line){ path=line; preview(line); }
-  }
-  function end(){
-    if(!dragging) return; dragging=false;
-    check(); preview(null);
-  }
-  function check(){
-    if(path.length<2) return;
-    var str=path.map(function(i){ return grid[Math.floor(i/COLS)][i%COLS]; }).join("");
+  function clearSeq(){ seq=[]; updateSeqUI(); }
+  function checkMatch(){
+    if(seq.length<2) return;
+    var str=seq.map(function(i){ return grid[Math.floor(i/COLS)][i%COLS]; }).join("");
     var rev=str.split("").reverse().join("");
     for(var k=0;k<targets.length;k++){
       var t=targets[k];
@@ -234,7 +240,7 @@
           setTimeout(function(x){return function(){cells[x].classList.remove('pop');};}(ci),320);
         });
         stars(cells[t.cells[t.cells.length-1]]);
-        sOK();
+        sOK(); clearSeq();
         if(foundN>=targets.length) finish();
         return;
       }
@@ -263,14 +269,15 @@
   }
 
   /* ---- イベント ---- */
-  board.addEventListener('pointerdown',function(e){ e.preventDefault(); start(e.clientX,e.clientY); });
-  window.addEventListener('pointermove',function(e){ if(dragging){ e.preventDefault(); move(e.clientX,e.clientY);} },{passive:false});
-  window.addEventListener('pointerup',end);
-  window.addEventListener('pointercancel',end);
+  board.addEventListener('click',function(e){
+    var t=e.target.closest('.cell'); if(!t) return;
+    ac(); tapCell(parseInt(t.dataset.i,10));
+  });
 
-  function newGame(){ ac(); buildData(); render(); }
+  function newGame(){ ac(); clearSeq(); buildData(); render(); }
   document.getElementById('new').addEventListener('click',newGame);
   document.getElementById('again').addEventListener('click',newGame);
+  document.getElementById('clear').addEventListener('click',function(){ ac(); clearSeq(); });
 
   buildData(); render();
 })();
