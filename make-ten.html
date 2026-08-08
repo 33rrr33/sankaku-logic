@@ -54,6 +54,24 @@
   @keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
   .done .big{font-size:clamp(26px,8vw,40px);font-weight:700;color:var(--ok-ink);}
   .done .msg{font-size:clamp(16px,4.5vw,20px);color:#7a6f6f;margin:6px 0 14px;}
+  .home{font-family:inherit;font-size:clamp(14px,3.8vw,17px);font-weight:700;color:#8a7f7f;
+    background:#fff;border:3px solid var(--line);border-radius:16px;padding:8px 14px;cursor:pointer;
+    box-shadow:0 3px 0 var(--line);}
+  .home:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line);}
+  /* スタートがめん */
+  .startscreen{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;
+    background:rgba(251,248,241,.97);padding:24px;}
+  .startscreen.show{display:flex;animation:pop .3s;}
+  .startcard{text-align:center;max-width:460px;width:100%;}
+  .startcard .emoji{font-size:clamp(48px,16vw,84px);line-height:1;margin-bottom:6px;}
+  .startcard .q{font-size:clamp(24px,7.2vw,38px);font-weight:700;color:#333;margin-bottom:8px;
+    text-shadow:0 2px 0 #fff,0 3px 0 var(--line);}
+  .startcard .hint{font-size:clamp(13px,4vw,17px);color:#7a6f6f;margin-bottom:22px;}
+  .choices{display:flex;flex-direction:column;gap:13px;}
+  .cbtn{font-family:inherit;font-size:clamp(22px,6.4vw,30px);font-weight:700;color:#fff;
+    background:var(--accent);border:none;border-radius:20px;padding:15px;cursor:pointer;
+    box-shadow:0 5px 0 #c85a5a;transition:transform .05s;}
+  .cbtn:active{transform:translateY(4px);box-shadow:0 1px 0 #c85a5a;}
 </style>
 </head>
 <body>
@@ -64,8 +82,9 @@
   </header>
 
   <div class="bar">
+    <div class="score">もんだい <b id="prog">1</b> / <span id="goal">1</span></div>
     <div class="score">つくった10：<b id="count">0</b> こ</div>
-    <button class="btn" id="new">もういちど</button>
+    <button class="home" id="home">さいしょ</button>
   </div>
 
   <div class="boardwrap">
@@ -74,9 +93,24 @@
   </div>
 
   <div class="done" id="done">
-    <div class="big">🎉 よく できました！ 🎉</div>
+    <div class="big" id="doneBig">🎉 できた！ 🎉</div>
     <div class="msg" id="doneMsg"></div>
-    <button class="btn" id="again">つぎの もんだい</button>
+    <button class="btn" id="again">つぎの もんだいへ →</button>
+  </div>
+</div>
+
+<div class="startscreen show" id="start">
+  <div class="startcard">
+    <div class="emoji">🔟</div>
+    <div class="q">きょうは なんもん がんばる？</div>
+    <div class="hint">すきな かずを えらんでね</div>
+    <div class="choices">
+      <button class="cbtn" data-n="1">1もん</button>
+      <button class="cbtn" data-n="5">5もん</button>
+      <button class="cbtn" data-n="10">10もん</button>
+      <button class="cbtn" data-n="15">15もん</button>
+      <button class="cbtn" data-n="20">20もん</button>
+    </div>
   </div>
 </div>
 
@@ -89,7 +123,14 @@
   var countEl=document.getElementById('count');
   var doneEl=document.getElementById('done');
   var doneMsg=document.getElementById('doneMsg');
+  var doneBig=document.getElementById('doneBig');
+  var againBtn=document.getElementById('again');
+  var startEl=document.getElementById('start');
+  var progEl=document.getElementById('prog');
+  var goalEl=document.getElementById('goal');
   var vals=[], tiles=[], matched=[], pairs=[], sel=null, count=0;
+  var SHEET=20;                 // 1シートの もんだいすう
+  var goal=0, solved=0, sheet=[], sIdx=0, finalMode=false;
 
   /* ---------- サウンド ---------- */
   var actx=null;
@@ -158,9 +199,26 @@
     return false;
   }
 
+  /* ---------- シート（20もん）と しんこう ---------- */
+  function makeSheet(){ var s=[]; for(var i=0;i<SHEET;i++) s.push(makeBoard()); return s; }
+  function startGame(g){
+    goal=g; solved=0; sIdx=0; finalMode=false;
+    sheet=makeSheet();
+    goalEl.textContent=g;
+    startEl.classList.remove('show');
+    doneEl.classList.remove('show');
+    loadProblem();
+  }
+  function loadProblem(){
+    vals=sheet[sIdx].slice();
+    progEl.textContent=(solved+1);
+    renderBoard();
+  }
+  function showStart(){ doneEl.classList.remove('show'); startEl.classList.add('show'); }
+
   /* ---------- びょうが ---------- */
-  function build(){
-    vals=makeBoard(); tiles=[]; matched=[]; pairs=[]; sel=null; count=0;
+  function renderBoard(){
+    tiles=[]; matched=[]; pairs=[]; sel=null; count=0;
     countEl.textContent='0';
     doneEl.classList.remove('show');
     board.style.gridTemplateColumns='repeat('+COLS+',1fr)';
@@ -245,11 +303,7 @@
     ac(); onTile(parseInt(t.dataset.i,10));
   });
 
-  function finish(){
-    sWin();
-    doneMsg.textContent='10 を '+count+' こ つくれたよ！';
-    doneEl.classList.add('show');
-    // かみふぶき
+  function confetti(){
     var ch=['⭐','✨','🎊','🌟','💫','🎉'];
     for(var i=0;i<24;i++){
       (function(d){ setTimeout(function(){
@@ -262,12 +316,37 @@
       },d); })(i*45);
     }
   }
+  function finish(){
+    sWin(); confetti();
+    solved++;
+    if(solved>=goal){
+      finalMode=true;
+      doneBig.textContent='🎉 ぜんぶ クリア！ 🎉';
+      doneMsg.textContent=goal+'もん ぜんぶ できたね！ すごい！';
+      againBtn.textContent='もういちど あそぶ';
+    } else {
+      finalMode=false;
+      doneBig.textContent='🎉 できた！ 🎉';
+      doneMsg.textContent='のこり あと '+(goal-solved)+'もん！';
+      againBtn.textContent='つぎの もんだいへ →';
+    }
+    doneEl.classList.add('show');
+  }
 
-  document.getElementById('new').addEventListener('click',function(){ ac(); build(); });
-  document.getElementById('again').addEventListener('click',function(){ ac(); build(); });
+  // スタートがめんの ボタン
+  var cbtns=document.querySelectorAll('.cbtn');
+  for(var b=0;b<cbtns.length;b++){
+    cbtns[b].addEventListener('click',function(){ ac(); startGame(parseInt(this.dataset.n,10)); });
+  }
+  againBtn.addEventListener('click',function(){
+    ac();
+    if(finalMode){ showStart(); }
+    else { sIdx++; loadProblem(); }
+  });
+  document.getElementById('home').addEventListener('click',function(){ ac(); showStart(); });
   window.addEventListener('resize',function(){ drawInk(); });
 
-  build();
+  showStart();
 })();
 </script>
 </body>
