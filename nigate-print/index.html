@@ -19,7 +19,7 @@
   *{-webkit-tap-highlight-color:transparent}
   .wrap{max-width:920px;margin:0 auto;padding:18px 16px 60px}
   h1{font-size:22px;margin:6px 0 2px;display:flex;align-items:center;gap:8px}
-  .sub{color:var(--muted);font-size:13px;margin:0 0 16px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 16px}
 
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;
          padding:16px;box-shadow:0 1px 3px rgba(20,40,80,.05);margin-bottom:16px}
@@ -28,7 +28,7 @@
 
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;
-        padding:9px 16px;font-size:15px;cursor:pointer;user-select:none;transition:.12s}
+        padding:10px 18px;font-size:16px;cursor:pointer;user-select:none;transition:.12s}
   .chip:hover{border-color:var(--accent)}
   .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
   .gradechips .chip{min-width:64px;text-align:center;font-weight:700}
@@ -48,7 +48,7 @@
   .quizlayout{display:flex;gap:18px;align-items:flex-start}
   .qcard{flex:1 1 auto;min-width:0}
   .q-domain{font-size:12px;font-weight:800;color:var(--muted)}
-  .q-unit{font-size:14px;color:var(--muted);margin:2px 0 4px}
+  .q-unit{font-size:16px;color:var(--ink);font-weight:800;margin:2px 0 8px}
   .q-text{font-size:24px;font-weight:800;line-height:1.45;margin:6px 0 18px;font-variant-numeric:tabular-nums;word-break:keep-all;overflow-wrap:break-word}
   .q-retry{display:inline-block;background:#fff4e0;color:#b06a00;border:1px solid #ffd894;
            border-radius:999px;padding:3px 12px;font-size:12px;font-weight:700;margin-bottom:10px}
@@ -64,7 +64,7 @@
   .feedback.good{color:var(--ok)} .feedback.bad{color:var(--warn)}
 
   /* タワー */
-  .tower-wrap{flex:0 0 128px;display:flex;flex-direction:column;align-items:center}
+  .tower-wrap{flex:0 0 152px;display:flex;flex-direction:column;align-items:center}
   .tower{display:flex;flex-direction:column-reverse;align-items:center;gap:4px;
          min-height:230px;justify-content:flex-start;padding:8px 0}
   .tower-cap{font-size:26px;line-height:1;margin-bottom:2px;transition:.3s}
@@ -77,7 +77,8 @@
   .tower-base{width:104px;height:12px;background:#cbb189;border-radius:6px;margin-top:2px;
               border-bottom:3px solid #a98a5c}
   @keyframes drop{from{opacity:0;transform:translateY(-26px) scale(.9)}to{opacity:1;transform:none}}
-  .legend{font-size:11px;color:var(--muted);margin-top:8px;text-align:center;line-height:1.6}
+  .legend{font-size:12px;color:var(--muted);margin-top:10px;text-align:center;line-height:1.7}
+  .legend .lg{display:block;margin-top:2px}
 
   /* ===== 結果 ===== */
   .result-hero{text-align:center;padding:6px 0 2px}
@@ -89,14 +90,14 @@
   .t.shaky{background:#fff6e3;color:#a86a00;border-color:#f4dca0}
   .t.weak{background:#fdeaea;color:#c23b3b;border-color:#f4b8b8}
   .weaklist{margin-top:6px}
-  .wk{display:flex;align-items:flex-start;gap:10px;border:1.5px solid var(--line);border-radius:12px;
-      padding:11px 13px;margin-bottom:8px;background:#fff}
+  .wk{display:flex;align-items:flex-start;gap:12px;border:1.5px solid var(--line);border-radius:12px;
+      padding:14px 16px;margin-bottom:10px;background:#fff}
   .wk input{margin-top:5px;width:18px;height:18px;flex:none}
   .wk .badge{flex:none;font-size:11px;font-weight:800;border-radius:999px;padding:2px 9px;margin-top:2px}
   .badge.weak{background:#fdeaea;color:#c23b3b} .badge.shaky{background:#fff6e3;color:#a86a00}
   .wk .info{min-width:0}
-  .wk .u{font-size:12px;color:var(--muted)}
-  .wk .s{font-weight:800;font-size:16px;line-height:1.35}
+  .wk .u{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
+  .wk .s{display:block;font-weight:800;font-size:18px;line-height:1.4}
   .lvlrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0}
   .lvlrow .star{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:8px 12px;
                 cursor:pointer;font-size:13px;white-space:nowrap}
@@ -104,8 +105,9 @@
 
   /* ===== プリント（本家 算数プリントメーカー 準拠） ===== */
   .ws-banner{background:var(--accent2);border:1.5px solid #cfe0ff;border-radius:12px;
-             padding:10px 14px;margin:0 auto 8px;max-width:210mm;font-weight:800;color:#234;font-size:15px}
+             padding:13px 16px;margin:0 auto 10px;max-width:210mm;font-weight:800;color:#234;font-size:16px;line-height:1.7}
   .ws-banner .em{color:var(--accent)}
+  .ws-banner .wb-u,.ws-banner .wb-s{display:block;font-weight:800;margin-top:4px}
   .sheet{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16mm 15mm;
          width:210mm;max-width:100%;min-height:297mm;margin:0 auto 22px;display:flex;flex-direction:column}
   .nw{white-space:nowrap}
@@ -115,6 +117,7 @@
   .frac .fd{padding:1px 3px 0}
   .sheet-head{border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:16px}
   .sheet-line1{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sheet-unit{font-size:15px;color:var(--ink);font-weight:700;margin-top:6px}
   .skillrow{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-top:6px}
   .sheet-skill{font-size:23px;font-weight:800;color:var(--accent);line-height:1.2}
   .namebox{font-size:15px;white-space:nowrap;flex:none}
@@ -990,10 +993,10 @@ function towerHTML(){
       ${blocks || '<div style="font-size:12px;color:var(--muted)">ここに つみきが たまって いくよ</div>'}
     </div>
     <div class="tower-base"></div>
-    <div class="legend">つみき ${S.pos}/${total}こ<br>
-      <span style="color:var(--wood-dark)">■</span>できた
-      <span style="color:#e0a93a">■</span>あとすこし
-      <span style="color:#e07070">■</span>にがて</div>`;
+    <div class="legend">つみき ${S.pos}/${total}こ
+      <span class="lg"><span style="color:var(--wood-dark)">■</span> できた</span>
+      <span class="lg"><span style="color:#e0a93a">■</span> あとすこし</span>
+      <span class="lg"><span style="color:#e07070">■</span> にがて</span></div>`;
 }
 function quizScreen(){
   sheetsEl.innerHTML=""; app.style.display="";
@@ -1082,8 +1085,10 @@ function resultScreen(){
       <label class="wk">
         <input type="checkbox" class="wkchk" data-idx="${idx}" checked>
         <span class="badge ${r.status}">${r.status==="weak"?"にがて":"あとすこし"}</span>
-        <span class="info"><span class="u">${r.dom}／${r.unit}</span>
-          <span class="s">${r.skill}</span></span>
+        <span class="info">
+          <span class="u">たんげん：${r.dom}／${r.unit}</span>
+          <span class="s">${r.skill}</span>
+        </span>
       </label>`).join("");
     body = `
       <div class="result-hero">
@@ -1182,10 +1187,13 @@ function renderWorksheets(){
     const u=unitByKey(sd.rec.key);
     const skill=u.skills[sd.rec.skillIdx];
     const tag = sd.rec.status==="weak"?"にがて":(sd.rec.status==="shaky"?"あとすこし":"ちょうせん");
-    html += `<div class="ws-banner noprint">📄 きみは「<span class="em">${u.unit}</span>」の「<span class="em">${skill}</span>」が <b>${tag}</b>だったね。れんしゅう しよう！</div>`;
+    html += `<div class="ws-banner noprint">📄 <b>${tag}</b>だった ところの れんしゅうだよ！
+      <span class="wb-u">たんげん：<span class="em">${u.unit}</span></span>
+      <span class="wb-s">スキル：<span class="em">${skill}</span></span></div>`;
     html += `<div class="sheet" data-si="${si}">
       <div class="sheet-head">
-        <div class="sheet-line1">算数プリント　${u.g}年生 ／ ${u.unit} ／ <span class="nw">むずかしさ ${"★".repeat(sd.level)}</span></div>
+        <div class="sheet-line1">算数プリント　${u.g}年生　｜　<span class="nw">むずかしさ ${"★".repeat(sd.level)}</span></div>
+        <div class="sheet-unit">たんげん：${u.unit}</div>
         <div class="skillrow">
           <div class="sheet-skill">${skill}</div>
           <div class="namebox"><span class="nf"><input class="nfin nf-year" inputmode="numeric">年</span><span class="nf"><input class="nfin nf-kumi" inputmode="numeric">組</span><span class="nf"><input class="nfin nf-ban" inputmode="numeric">番</span></div>
