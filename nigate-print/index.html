@@ -108,6 +108,13 @@
              padding:13px 16px;margin:0 auto 10px;max-width:210mm;font-weight:800;color:#234;font-size:16px;line-height:1.7}
   .ws-banner .em{color:var(--accent)}
   .ws-banner .wb-u,.ws-banner .wb-s{display:block;font-weight:800;margin-top:4px}
+  .wsbar{max-width:210mm;margin:0 auto 10px}
+  .wsstep{font-size:15px;font-weight:800;color:var(--ink);margin-bottom:8px}
+  .wsbtns{max-width:210mm;margin:16px auto 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .wsbtns .big{font-size:16px}
+  .wsbtns .navrow{display:flex;gap:10px;flex-wrap:wrap;width:100%;margin-top:6px;align-items:center;border-top:1px dashed var(--line);padding-top:12px}
+  .wsbtns .navrow .go{font-weight:800}
+  .wsbtns .donemsg{font-weight:800;color:var(--ok);align-self:center}
   .sheet{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16mm 15mm;
          width:210mm;max-width:100%;min-height:297mm;margin:0 auto 22px;display:flex;flex-direction:column}
   .nw{white-space:nowrap}
@@ -886,7 +893,7 @@ const S = {
   queue:[], pos:0, phase:"q", results:{},
   levelMode:"auto",            // "auto" or 1..5
   name:{year:"", kumi:"", ban:""},
-  showAns:false, sheetsData:[]
+  showAns:false, sheetsData:[], sheetIdx:0
 };
 const qkey = it => it.key + "#" + it.skillIdx;
 
@@ -1167,30 +1174,29 @@ function makeWorksheets(recs, forcedLevel){
     const lv=levelFor(r, forcedLevel);
     return {rec:r, level:lv, problems:genProblems(r.key, r.skillIdx, lv)};
   });
-  S.showAns=false;
-  renderWorksheets();
+  S.showAns=false; S.sheetIdx=0;
+  renderWorksheet();
   window.scrollTo(0,0);
 }
-function renderWorksheets(){
+function renderWorksheet(){
   app.style.display="none";
+  const N=S.sheetsData.length;
+  S.sheetIdx=Math.max(0,Math.min(S.sheetIdx,N-1));
+  const sd=S.sheetsData[S.sheetIdx];
+  const u=unitByKey(sd.rec.key), skill=u.skills[sd.rec.skillIdx];
+  const tag = sd.rec.status==="weak"?"にがて":(sd.rec.status==="shaky"?"あとすこし":"ちょうせん");
   const nums="①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳".split("");
   const labels="アイウエオ".split("");
-  let html = `
-    <div class="actions noprint" style="margin:0 0 16px">
-      <button class="go" id="printBtn">🖨 いんさつ / PDF</button>
-      <button class="ghost" id="ansBtn">${S.showAns?"こたえを かくす":"こたえを 見る"}</button>
-      <button class="ghost" id="regenBtn">🔀 べつの もんだい</button>
-      <button class="ghost" id="backBtn">← もどる</button>
-      <button class="ghost" id="homeBtn">↩ さいしょから</button>
+  const isLast = S.sheetIdx >= N-1;
+
+  let html = `<div class="wsbar noprint">
+      <div class="wsstep">📄 プリント <b>${S.sheetIdx+1}</b> / ${N} まいめ</div>
+      <div class="ws-banner"><b>${tag}</b>だった ところの れんしゅうだよ！
+        <span class="wb-u">たんげん：<span class="em">${u.unit}</span></span>
+        <span class="wb-s">スキル：<span class="em">${skill}</span></span></div>
     </div>`;
-  S.sheetsData.forEach((sd,si)=>{
-    const u=unitByKey(sd.rec.key);
-    const skill=u.skills[sd.rec.skillIdx];
-    const tag = sd.rec.status==="weak"?"にがて":(sd.rec.status==="shaky"?"あとすこし":"ちょうせん");
-    html += `<div class="ws-banner noprint">📄 <b>${tag}</b>だった ところの れんしゅうだよ！
-      <span class="wb-u">たんげん：<span class="em">${u.unit}</span></span>
-      <span class="wb-s">スキル：<span class="em">${skill}</span></span></div>`;
-    html += `<div class="sheet" data-si="${si}">
+
+  html += `<div class="sheet" data-si="${S.sheetIdx}">
       <div class="sheet-head">
         <div class="sheet-line1">算数プリント　${u.g}年生　｜　<span class="nw">むずかしさ ${"★".repeat(sd.level)}</span></div>
         <div class="sheet-unit">たんげん：${u.unit}</div>
@@ -1199,44 +1205,47 @@ function renderWorksheets(){
           <div class="namebox"><span class="nf"><input class="nfin nf-year" inputmode="numeric">年</span><span class="nf"><input class="nfin nf-kumi" inputmode="numeric">組</span><span class="nf"><input class="nfin nf-ban" inputmode="numeric">番</span></div>
         </div>
       </div>`;
-    const hasChoice=sd.problems.some(o=>o.ch);
-    html += `<div class="qgrid${hasChoice?" one":""}">`;
-    sd.problems.forEach((o,i)=>{
-      const no=`<span class="no">${nums[i]||(i+1)}</span>`;
-      const ans=S.showAns?o.a:"&nbsp;";
-      if(o.ch){
-        const opts=`<div class="opts">`+o.ch.map((c,j)=>`<span class="opt">${labels[j]}. ${c}</span>`).join("")+`</div>`;
-        html+=`<div class="q choice"><div class="qtext">${no}<span class="body">${o.q}</span><span class="write short">${ans}</span></div>${opts}</div>`;
-      }else{
-        html+=`<div class="q"><div class="qtext">${no}<span class="body">${o.q}</span></div><div class="ansline"><span class="write">${ans}</span></div></div>`;
-      }
-    });
-    html += `</div></div>`;
+  const hasChoice=sd.problems.some(o=>o.ch);
+  html += `<div class="qgrid${hasChoice?" one":""}">`;
+  sd.problems.forEach((o,i)=>{
+    const no=`<span class="no">${nums[i]||(i+1)}</span>`;
+    const ans=S.showAns?o.a:"&nbsp;";
+    if(o.ch){
+      const opts=`<div class="opts">`+o.ch.map((c,j)=>`<span class="opt">${labels[j]}. ${c}</span>`).join("")+`</div>`;
+      html+=`<div class="q choice"><div class="qtext">${no}<span class="body">${o.q}</span><span class="write short">${ans}</span></div>${opts}</div>`;
+    }else{
+      html+=`<div class="q"><div class="qtext">${no}<span class="body">${o.q}</span></div><div class="ansline"><span class="write">${ans}</span></div></div>`;
+    }
   });
+  html += `</div></div>`;
+
+  html += `<div class="wsbtns noprint">
+      <button class="go big" id="printBtn">🖨 いんさつ / PDF</button>
+      <button class="ghost big" id="ansBtn">${S.showAns?"こたえを かくす":"こたえを 見る"}</button>
+      <button class="ghost big" id="regenBtn">🔀 べつの もんだい</button>
+      <div class="navrow">
+        ${S.sheetIdx>0?'<button class="ghost" id="prevBtn">← まえの プリント</button>':''}
+        ${!isLast?'<button class="go" id="nextBtn">つぎの プリント →</button>':'<span class="donemsg">これで さいご！🎉</span>'}
+        <button class="ghost" id="backBtn">けっかに もどる</button>
+        <button class="ghost" id="homeBtn">↩ さいしょから</button>
+      </div>
+    </div>`;
+
   sheetsEl.innerHTML=html;
 
-  // 年・組・番（全シート共通、入力を保持）
-  sheetsEl.querySelectorAll(".sheet").forEach(sheet=>{
-    const y=sheet.querySelector(".nf-year"), k=sheet.querySelector(".nf-kumi"), b=sheet.querySelector(".nf-ban");
-    y.value = S.name.year!=="" ? S.name.year : String(S.grade||"");
-    k.value = S.name.kumi; b.value = S.name.ban;
-    y.oninput=()=>{ S.name.year=y.value; syncName(); };
-    k.oninput=()=>{ S.name.kumi=k.value; syncName(); };
-    b.oninput=()=>{ S.name.ban=b.value; syncName(); };
-  });
-  function syncName(){
-    sheetsEl.querySelectorAll(".sheet").forEach(sh=>{
-      sh.querySelector(".nf-year").value=S.name.year!==""?S.name.year:String(S.grade||"");
-      sh.querySelector(".nf-kumi").value=S.name.kumi;
-      sh.querySelector(".nf-ban").value=S.name.ban;
-    });
-  }
+  const sheet=sheetsEl.querySelector(".sheet");
+  const y=sheet.querySelector(".nf-year"),k=sheet.querySelector(".nf-kumi"),b=sheet.querySelector(".nf-ban");
+  y.value=S.name.year!==""?S.name.year:String(S.grade||"");
+  k.value=S.name.kumi; b.value=S.name.ban;
+  y.oninput=()=>S.name.year=y.value;
+  k.oninput=()=>S.name.kumi=k.value;
+  b.oninput=()=>S.name.ban=b.value;
+
   document.getElementById("printBtn").onclick=()=>window.print();
-  document.getElementById("ansBtn").onclick=()=>{ S.showAns=!S.showAns; renderWorksheets(); };
-  document.getElementById("regenBtn").onclick=()=>{
-    S.sheetsData.forEach(sd=>sd.problems=genProblems(sd.rec.key, sd.rec.skillIdx, sd.level));
-    renderWorksheets();
-  };
+  document.getElementById("ansBtn").onclick=()=>{ S.showAns=!S.showAns; renderWorksheet(); };
+  document.getElementById("regenBtn").onclick=()=>{ sd.problems=genProblems(sd.rec.key, sd.rec.skillIdx, sd.level); renderWorksheet(); };
+  const nx=document.getElementById("nextBtn"); if(nx) nx.onclick=()=>{ S.sheetIdx++; S.showAns=false; renderWorksheet(); window.scrollTo(0,0); };
+  const pv=document.getElementById("prevBtn"); if(pv) pv.onclick=()=>{ S.sheetIdx--; S.showAns=false; renderWorksheet(); window.scrollTo(0,0); };
   document.getElementById("backBtn").onclick=()=>{ app.style.display=""; sheetsEl.innerHTML=""; resultScreen(); };
   document.getElementById("homeBtn").onclick=homeScreen;
 }
