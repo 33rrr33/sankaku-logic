@@ -42,6 +42,20 @@
   .foot{color:var(--muted);font-size:12px;margin-top:22px;line-height:1.8}
   .foot a{color:var(--accent);text-decoration:none} .foot a:hover{text-decoration:underline}
 
+  /* ===== ステップ選択（1つずつ） ===== */
+  .step-title{font-size:19px;font-weight:800;margin:2px 0 14px}
+  .opts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .optbtn{border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:20px 14px;
+          font-size:18px;font-weight:800;cursor:pointer;text-align:center;transition:.12s;line-height:1.3;color:var(--ink)}
+  .optbtn:hover{border-color:var(--accent);background:var(--accent2)}
+  .optbtn small{display:block;color:var(--muted);font-weight:600;font-size:12px;margin-top:5px}
+  .optbtn:disabled{cursor:not-allowed;opacity:.4}
+  .crumbs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .crumb{background:var(--accent2);color:var(--accent);border:1.5px solid #cfe0ff;border-radius:999px;
+         padding:6px 14px;font-size:14px;font-weight:800;cursor:pointer}
+  .crumb:hover{border-color:var(--accent)}
+  .back{margin-top:16px}
+
   /* ===== 診断（つみきタワー） ===== */
   .quiz-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
   .prog{font-size:13px;color:var(--muted);font-weight:700}
@@ -893,7 +907,7 @@ const S = {
   queue:[], pos:0, phase:"q", results:{},
   levelMode:"auto",            // "auto" or 1..5
   name:{year:"", kumi:"", ban:""},
-  showAns:false, sheetsData:[], sheetIdx:0
+  showAns:false, sheetsData:[], sheetIdx:0, homeStep:1
 };
 const qkey = it => it.key + "#" + it.skillIdx;
 
@@ -903,46 +917,62 @@ const qkey = it => it.key + "#" + it.skillIdx;
 function homeScreen(){
   sheetsEl.innerHTML=""; app.style.display="";
   S.queue=[]; S.pos=0; S.results={}; S.phase="q"; S.sheetsData=[];
-  const domChips = ["all",...DOM_ORDER].map(d=>{
-    const lab = DOM_LABEL[d] || d;
-    return `<span class="chip dom ${S.domain===d?"on":""}" data-dom="${d}">${lab}</span>`;
-  }).join("");
-  app.innerHTML = `
-    <h1>🧮 さんすう にがて はっけん！</h1>
-    <p class="sub">クイズに こたえて、にがてな ところを さがそう。きみだけの れんしゅうプリントが できるよ！</p>
-    <div class="panel">
-      <div class="row">
-        <label class="tag">① なんねんせい？</label>
-        <div class="chips gradechips" id="grades">
-          ${[1,2,3,4,5,6].map(g=>`<span class="chip g ${S.grade===g?"on":""}" data-g="${g}">${g}ねんせい</span>`).join("")}
-        </div>
-      </div>
-      <div class="row">
-        <label class="tag">② どこを ためす？</label>
-        <div class="chips" id="doms">${domChips}</div>
-      </div>
-      <div class="row">
-        <label class="tag">③ もんだいの かず</label>
-        <div class="chips" id="modes">
-          <span class="chip m ${S.mode==="quick"?"on":""}" data-m="quick">さくっと（8もんくらい）</span>
-          <span class="chip m ${S.mode==="full"?"on":""}" data-m="full">たっぷり（ぜんぶ）</span>
-        </div>
-      </div>
-      <div class="actions">
-        <button class="go" id="start" ${S.grade?"":"disabled"}>クイズ スタート！ →</button>
-        <span id="qcount" class="prog"></span>
-      </div>
-    </div>
-    <p class="foot">
+  S.grade=null; S.domain="all"; S.mode="quick"; S.homeStep=1;
+  renderSetup();
+}
+function gotoStep(n){ S.homeStep=n; renderSetup(); }
+function footerHTML(){
+  return `<p class="foot">
       ※このアプリは「さんすう つみきタワー」と「算数プリントメーカー」を 合体させて 作りました。<br>
       つみきタワー → <a href="https://33rrr33.github.io/tsumiki-tower/" target="_blank" rel="noopener">こちら</a>
     </p>`;
+}
+function renderSetup(){
+  app.style.display=""; sheetsEl.innerHTML="";
+  let crumbs="";
+  if(S.homeStep>1 && S.grade) crumbs+=`<span class="crumb" data-s="1">${S.grade}ねんせい</span>`;
+  if(S.homeStep>2) crumbs+=`<span class="crumb" data-s="2">${DOM_LABEL[S.domain]||S.domain}</span>`;
 
-  app.querySelectorAll(".chip.g").forEach(c=>c.onclick=()=>{ S.grade=+c.dataset.g; homeScreen(); refreshCount(); });
-  app.querySelectorAll(".chip.dom").forEach(c=>c.onclick=()=>{ S.domain=c.dataset.dom; homeScreen(); refreshCount(); });
-  app.querySelectorAll(".chip.m").forEach(c=>c.onclick=()=>{ S.mode=c.dataset.m; homeScreen(); refreshCount(); });
-  const st=document.getElementById("start"); if(st) st.onclick=startDiagnostic;
-  refreshCount();
+  let inner="";
+  if(S.homeStep===1){
+    inner = `<div class="step-title">① なんねんせい？</div>
+      <div class="opts-grid">
+        ${[1,2,3,4,5,6].map(g=>`<button class="optbtn" data-g="${g}">${g}ねんせい</button>`).join("")}
+      </div>`;
+  } else if(S.homeStep===2){
+    inner = `<div class="step-title">② どこを ためす？</div>
+      <div class="opts-grid">
+        ${["all",...DOM_ORDER].map(d=>{
+           const lab=DOM_LABEL[d]||d;
+           const n = d==="all" ? TAXO.filter(u=>u.g===S.grade).length : TAXO.filter(u=>u.g===S.grade&&u.dom===d).length;
+           return `<button class="optbtn" data-dom="${d}" ${n===0?"disabled":""}>${lab}<small>${n>0?n+"たんげん":"なし"}</small></button>`;
+        }).join("")}
+      </div>`;
+  } else {
+    const n=candidateSkills().length;
+    inner = `<div class="step-title">③ もんだいの かず</div>
+      <div class="opts-grid">
+        <button class="optbtn" data-m="quick">さくっと<small>やく ${Math.min(8,n)}もん</small></button>
+        <button class="optbtn" data-m="full">たっぷり<small>ぜんぶ ${n}もん</small></button>
+      </div>`;
+  }
+
+  app.innerHTML = `
+    <h1>🧮 さんすう にがて はっけん！</h1>
+    ${S.homeStep===1?'<p class="sub">クイズに こたえて、にがてな ところを さがそう。きみだけの れんしゅうプリントが できるよ！</p>':""}
+    <div class="panel">
+      ${crumbs?`<div class="crumbs">${crumbs}</div>`:""}
+      ${inner}
+      ${S.homeStep>1?'<button class="ghost back" id="backBtn">← もどる</button>':""}
+    </div>
+    ${S.homeStep===1?footerHTML():""}`;
+
+  app.querySelectorAll(".optbtn[data-g]").forEach(b=>b.onclick=()=>{ S.grade=+b.dataset.g; gotoStep(2); });
+  app.querySelectorAll(".optbtn[data-dom]").forEach(b=>b.onclick=()=>{ if(b.hasAttribute("disabled"))return; S.domain=b.dataset.dom; gotoStep(3); });
+  app.querySelectorAll(".optbtn[data-m]").forEach(b=>b.onclick=()=>{ S.mode=b.dataset.m; startDiagnostic(); });
+  app.querySelectorAll(".crumb").forEach(c=>c.onclick=()=>gotoStep(+c.dataset.s));
+  const bk=document.getElementById("backBtn"); if(bk) bk.onclick=()=>gotoStep(Math.max(1,S.homeStep-1));
+  window.scrollTo(0,0);
 }
 function candidateSkills(){
   const items=[];
@@ -950,11 +980,6 @@ function candidateSkills(){
     u.skills.forEach((sn,i)=>items.push({key:u.key, skillIdx:i, unit:u.unit, dom:u.dom, skill:sn}));
   });
   return items;
-}
-function refreshCount(){
-  const el=document.getElementById("qcount"); if(!el||!S.grade) return;
-  const n=candidateSkills().length;
-  el.textContent = S.mode==="full" ? `もんだい：ぜんぶで ${n}こ` : `もんだい：やく ${Math.min(8,n)}こ`;
 }
 
 /* ================================================================
