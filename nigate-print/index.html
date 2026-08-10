@@ -875,6 +875,7 @@ const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.f
 const app = document.getElementById("app");
 const sheetsEl = document.getElementById("sheets");
 const DOM_ORDER = ["数と計算","図形","測定","変化と関係","データの活用"];
+const DOM_LABEL = {"all":"ぜんぶ","数と計算":"けいさん","図形":"かたち","測定":"はかる","変化と関係":"きまり・わりあい","データの活用":"グラフ"};
 
 /* ---------- 状態 ---------- */
 const S = {
@@ -893,39 +894,38 @@ function homeScreen(){
   sheetsEl.innerHTML=""; app.style.display="";
   S.queue=[]; S.pos=0; S.results={}; S.phase="q"; S.sheetsData=[];
   const domChips = ["all",...DOM_ORDER].map(d=>{
-    const lab = d==="all" ? "ぜんぶ" : d;
+    const lab = DOM_LABEL[d] || d;
     return `<span class="chip dom ${S.domain===d?"on":""}" data-dom="${d}">${lab}</span>`;
   }).join("");
   app.innerHTML = `
-    <h1>🧮 算数プリント自動作成 <span style="font-size:14px;color:var(--muted);font-weight:700">にがてはっけん版</span></h1>
-    <p class="sub">つみきタワーで しんだん → にがてな 単元を 見つけて、その子だけの れんしゅうプリントを 自動で つくります。</p>
+    <h1>🧮 さんすう にがて はっけん！</h1>
+    <p class="sub">クイズに こたえて、にがてな ところを さがそう。きみだけの れんしゅうプリントが できるよ！</p>
     <div class="panel">
       <div class="row">
-        <label class="tag">① 学年を えらぶ</label>
+        <label class="tag">① なんねんせい？</label>
         <div class="chips gradechips" id="grades">
-          ${[1,2,3,4,5,6].map(g=>`<span class="chip g ${S.grade===g?"on":""}" data-g="${g}">${g}年生</span>`).join("")}
+          ${[1,2,3,4,5,6].map(g=>`<span class="chip g ${S.grade===g?"on":""}" data-g="${g}">${g}ねんせい</span>`).join("")}
         </div>
       </div>
       <div class="row">
-        <label class="tag">② はんい（りょういき）</label>
+        <label class="tag">② どこを ためす？</label>
         <div class="chips" id="doms">${domChips}</div>
       </div>
       <div class="row">
-        <label class="tag">③ しんだんの ながさ</label>
+        <label class="tag">③ もんだいの かず</label>
         <div class="chips" id="modes">
-          <span class="chip m ${S.mode==="quick"?"on":""}" data-m="quick">さくっと（約8問）</span>
-          <span class="chip m ${S.mode==="full"?"on":""}" data-m="full">しっかり（ぜんぶ）</span>
+          <span class="chip m ${S.mode==="quick"?"on":""}" data-m="quick">さくっと（8もんくらい）</span>
+          <span class="chip m ${S.mode==="full"?"on":""}" data-m="full">たっぷり（ぜんぶ）</span>
         </div>
       </div>
       <div class="actions">
-        <button class="go" id="start" ${S.grade?"":"disabled"}>しんだんを はじめる →</button>
+        <button class="go" id="start" ${S.grade?"":"disabled"}>クイズ スタート！ →</button>
         <span id="qcount" class="prog"></span>
       </div>
     </div>
     <p class="foot">
-      このツールは 2つの アプリを 合体させた ものです（どちらも そのまま つかえます）：<br>
-      ・<a href="https://33rrr33.github.io/tsumiki-tower/" target="_blank" rel="noopener">さんすう つみきタワー</a>（診断の 流れ・単元/スキル）<br>
-      ・算数プリントメーカー（プリントの 中身・体裁）
+      ※このアプリは「さんすう つみきタワー」と「算数プリントメーカー」を 合体させて 作りました。<br>
+      つみきタワー → <a href="https://33rrr33.github.io/tsumiki-tower/" target="_blank" rel="noopener">こちら</a>
     </p>`;
 
   app.querySelectorAll(".chip.g").forEach(c=>c.onclick=()=>{ S.grade=+c.dataset.g; homeScreen(); refreshCount(); });
@@ -944,7 +944,7 @@ function candidateSkills(){
 function refreshCount(){
   const el=document.getElementById("qcount"); if(!el||!S.grade) return;
   const n=candidateSkills().length;
-  el.textContent = S.mode==="full" ? `この はんい：${n}スキル` : `この はんいから 約${Math.min(8,n)}スキル`;
+  el.textContent = S.mode==="full" ? `もんだい：ぜんぶで ${n}こ` : `もんだい：やく ${Math.min(8,n)}こ`;
 }
 
 /* ================================================================
@@ -987,12 +987,12 @@ function towerHTML(){
   return `
     <div class="tower-cap">${cap}</div>
     <div class="tower">
-      ${blocks || '<div style="font-size:12px;color:var(--muted)">ここに つみきが つみ上がるよ</div>'}
+      ${blocks || '<div style="font-size:12px;color:var(--muted)">ここに つみきが たまって いくよ</div>'}
     </div>
     <div class="tower-base"></div>
     <div class="legend">つみき ${S.pos}/${total}こ<br>
       <span style="color:var(--wood-dark)">■</span>できた
-      <span style="color:#e0a93a">■</span>あと少し
+      <span style="color:#e0a93a">■</span>あとすこし
       <span style="color:#e07070">■</span>にがて</div>`;
 }
 function quizScreen(){
@@ -1006,7 +1006,7 @@ function quizScreen(){
   const order=shuffle(src.c.map((c,i)=>({c,correct:i===src.a})));
   app.innerHTML = `
     <div class="quiz-top">
-      <span class="prog">しんだん ${S.pos+1} / ${S.queue.length}</span>
+      <span class="prog">もんだい ${S.pos+1} / ${S.queue.length}</span>
       <button class="ghost" id="quit" style="padding:6px 12px;font-size:13px">やめる</button>
     </div>
     <div class="panel">
@@ -1014,7 +1014,7 @@ function quizScreen(){
         <div class="qcard">
           <div class="q-domain">${it.dom}</div>
           <div class="q-unit">${it.unit}</div>
-          ${S.phase==="confirm"?'<div class="q-retry">もう1もん たしかめ！</div><br>':""}
+          ${S.phase==="confirm"?'<div class="q-retry">もう いちど たしかめ！</div><br>':""}
           <div class="q-text">${src.t}</div>
           <div class="choices2" id="choices">
             ${order.map((o,i)=>`<button class="cbtn" data-i="${i}" data-correct="${o.correct}">${o.c}</button>`).join("")}
@@ -1024,7 +1024,7 @@ function quizScreen(){
         <div class="tower-wrap">${towerHTML()}</div>
       </div>
     </div>`;
-  document.getElementById("quit").onclick=()=>{ if(confirm("しんだんを やめて 最初に もどる？")) homeScreen(); };
+  document.getElementById("quit").onclick=()=>{ if(confirm("やめて さいしょに もどる？")) homeScreen(); };
   const fb=document.getElementById("fb");
   app.querySelectorAll(".cbtn").forEach(b=>b.onclick=()=>{
     const correct = b.dataset.correct==="true";
@@ -1032,15 +1032,15 @@ function quizScreen(){
       if(x.dataset.correct==="true") x.classList.add("correct"); });
     if(!correct) b.classList.add("wrong");
     if(correct){
-      fb.textContent = S.phase==="q" ? "せいかい！🎉" : "そう、それ！できたね😊";
+      fb.textContent = S.phase==="q" ? "せいかい！🎉" : "せいかい！できたね😊";
       fb.className="feedback good";
       setTimeout(()=>recordAndNext(it, S.phase==="q"?"ok":"shaky"), 650);
     }else{
       if(S.phase==="q"){
-        fb.textContent="おしい！もう1もん たしかめてみよう👀"; fb.className="feedback bad";
+        fb.textContent="おしい！もう いちど やってみよう👀"; fb.className="feedback bad";
         setTimeout(()=>{ S.phase="confirm"; quizScreen(); }, 900);
       }else{
-        fb.textContent="ここは いっしょに れんしゅうしよう💪"; fb.className="feedback bad";
+        fb.textContent="ここは あとで れんしゅう しよう💪"; fb.className="feedback bad";
         setTimeout(()=>recordAndNext(it, "weak"), 900);
       }
     }
@@ -1069,35 +1069,35 @@ function resultScreen(){
     body = `
       <div class="result-hero">
         <div class="tower-cap" style="font-size:40px">🏆</div>
-        <div class="big">ぜんぶ しっかり できてた！</div>
-        <p class="sub" style="margin-top:6px">この はんいは バッチリ。すごい！🌟</p>
+        <div class="big">ぜんぶ できた！すごい🌟</div>
+        <p class="sub" style="margin-top:6px">にがては なかったよ！</p>
       </div>
       <div class="actions" style="justify-content:center;margin-top:8px">
-        <button class="go" id="challenge">ちょうせんプリントを つくる</button>
-        <button class="ghost" id="again">もう一度 しんだん</button>
-        <button class="ghost" id="home2">学年を かえる</button>
+        <button class="go" id="challenge">ちょうせん プリントを つくる</button>
+        <button class="ghost" id="again">もういちど クイズ</button>
+        <button class="ghost" id="home2">さいしょに もどる</button>
       </div>`;
   }else{
     const list = targets.map((r,idx)=>`
       <label class="wk">
         <input type="checkbox" class="wkchk" data-idx="${idx}" checked>
-        <span class="badge ${r.status}">${r.status==="weak"?"にがて":"あと少し"}</span>
+        <span class="badge ${r.status}">${r.status==="weak"?"にがて":"あとすこし"}</span>
         <span class="info"><span class="u">${r.dom}／${r.unit}</span>
           <span class="s">${r.skill}</span></span>
       </label>`).join("");
     body = `
       <div class="result-hero">
         <div class="tower-cap" style="font-size:34px">🐣</div>
-        <div class="big">しんだん かんりょう！</div>
+        <div class="big">ぜんぶ おわり！🎉</div>
       </div>
       <div class="tally">
         <div class="t ok">できた<b>${ok}</b></div>
-        <div class="t shaky">あと少し<b>${shaky.length}</b></div>
+        <div class="t shaky">あとすこし<b>${shaky.length}</b></div>
         <div class="t weak">にがて<b>${weak.length}</b></div>
       </div>
       <p style="font-weight:800;font-size:16px;margin:4px 0 2px">
-        きみは つぎの ところが にがてみたい 👇<br>
-        <span style="color:var(--muted);font-size:13px;font-weight:700">（チェックした ぶんの プリントを つくるよ）</span>
+        にがてな ところ 👇<br>
+        <span style="color:var(--muted);font-size:13px;font-weight:700">（チェックした ところの プリントが できるよ）</span>
       </p>
       <div class="weaklist">${list}</div>
       <div class="lvlrow">
@@ -1106,9 +1106,9 @@ function resultScreen(){
         ${[1,2,3,4,5].map(l=>`<span class="star lv" data-lv="${l}">★${l}</span>`).join("")}
       </div>
       <div class="actions">
-        <button class="go" id="makews">この プリントを つくる →</button>
-        <button class="ghost" id="again">もう一度 しんだん</button>
-        <button class="ghost" id="home2">学年を かえる</button>
+        <button class="go" id="makews">プリントを つくる →</button>
+        <button class="ghost" id="again">もういちど クイズ</button>
+        <button class="ghost" id="home2">さいしょに もどる</button>
       </div>`;
   }
   app.innerHTML = `<div class="panel">${body}</div>`;
@@ -1127,7 +1127,7 @@ function resultScreen(){
     mk.onclick=()=>{
       const chosen=[];
       app.querySelectorAll(".wkchk").forEach(c=>{ if(c.checked) chosen.push(targets[+c.dataset.idx]); });
-      if(!chosen.length){ alert("プリントを つくる ところを 1つ以上 えらんでね。"); return; }
+      if(!chosen.length){ alert("プリントを つくる ところを えらんでね。"); return; }
       makeWorksheets(chosen, null);
     };
   }
@@ -1175,14 +1175,14 @@ function renderWorksheets(){
       <button class="go" id="printBtn">🖨 いんさつ / PDF</button>
       <button class="ghost" id="ansBtn">${S.showAns?"こたえを かくす":"こたえを 見る"}</button>
       <button class="ghost" id="regenBtn">🔀 べつの もんだい</button>
-      <button class="ghost" id="backBtn">← けっかに もどる</button>
-      <button class="ghost" id="homeBtn">↩ 最初から</button>
+      <button class="ghost" id="backBtn">← もどる</button>
+      <button class="ghost" id="homeBtn">↩ さいしょから</button>
     </div>`;
   S.sheetsData.forEach((sd,si)=>{
     const u=unitByKey(sd.rec.key);
     const skill=u.skills[sd.rec.skillIdx];
-    const tag = sd.rec.status==="weak"?"にがて":(sd.rec.status==="shaky"?"あと少し":"ちょうせん");
-    html += `<div class="ws-banner noprint">📄 きみは「<span class="em">${u.unit}</span>」の「<span class="em">${skill}</span>」が <b>${tag}</b>だったから、この プリントを ようい したよ！</div>`;
+    const tag = sd.rec.status==="weak"?"にがて":(sd.rec.status==="shaky"?"あとすこし":"ちょうせん");
+    html += `<div class="ws-banner noprint">📄 きみは「<span class="em">${u.unit}</span>」の「<span class="em">${skill}</span>」が <b>${tag}</b>だったね。れんしゅう しよう！</div>`;
     html += `<div class="sheet" data-si="${si}">
       <div class="sheet-head">
         <div class="sheet-line1">算数プリント　${u.g}年生 ／ ${u.unit} ／ <span class="nw">むずかしさ ${"★".repeat(sd.level)}</span></div>
