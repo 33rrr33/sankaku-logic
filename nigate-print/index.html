@@ -1185,14 +1185,13 @@ function resultScreen(){
         にがてな ところ 👇
       </p>
       <div class="weaklist">${list}</div>
-      <label class="wk-all"><input type="checkbox" id="chkAll" checked> <b>ぜんぶ つくる</b><span style="color:var(--muted);font-weight:700;font-size:13px">（${targets.length}まい）</span></label>
       <div class="lvlrow">
         <span style="font-weight:700;font-size:13px">むずかしさ：</span>
         <span class="star lv on" data-lv="auto">おまかせ</span>
         ${[1,2,3,4,5].map(l=>`<span class="star lv" data-lv="${l}">★${l}</span>`).join("")}
       </div>
       <div class="actions">
-        <button class="go" id="makews">プリントを つくる →</button>
+        <button class="go" id="makews">プリントを つくる（${targets.length}まい）→</button>
         <button class="ghost" id="again">もういちど クイズ</button>
         <button class="ghost" id="home2">さいしょに もどる</button>
       </div>`;
@@ -1211,11 +1210,7 @@ function resultScreen(){
       app.querySelectorAll(".star.lv").forEach(x=>x.classList.remove("on"));
       s.classList.add("on"); S.levelMode = s.dataset.lv==="auto"?"auto":+s.dataset.lv;
     });
-    mk.onclick=()=>{
-      const all=document.getElementById("chkAll");
-      if(!all || !all.checked){ alert("「ぜんぶ つくる」に チェックを 入れてね。"); return; }
-      makeWorksheets(targets, null);
-    };
+    mk.onclick=()=>{ makeWorksheets(targets, null); };
   }
 }
 
