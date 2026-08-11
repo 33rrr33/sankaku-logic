@@ -950,7 +950,7 @@ function renderSetup(){
            return `<button class="optbtn" data-dom="${d}" ${n===0?"disabled":""}>${lab}<small>${n>0?n+"たんげん":"なし"}</small></button>`;
         }).join("")}
       </div>`;
-  } else if(S.homeStep===3){
+  } else {
     const units = TAXO.filter(u=>u.g===S.grade && (S.domain==="all"||u.dom===S.domain));
     let btns = `<button class="optbtn" data-unit="__all__">ぜんぶ<small>${units.length}たんげん</small></button>`;
     if(S.domain==="all"){
@@ -963,15 +963,8 @@ function renderSetup(){
     } else {
       units.forEach(u=> btns += `<button class="optbtn" data-unit="${u.key}">${u.unit}<small>${u.skills.length}スキル</small></button>`);
     }
-    inner = `<div class="step-title">③ どの たんげん？</div>
+    inner = `<div class="step-title">③ どの たんげん？<span style="font-size:13px;font-weight:600;color:var(--muted)">（5問で しんだん）</span></div>
       <div class="opts-grid">${btns}</div>`;
-  } else {
-    const n=candidateSkills().length;
-    inner = `<div class="step-title">④ もんだいの かず</div>
-      <div class="opts-grid">
-        <button class="optbtn" data-m="quick">さくっと<small>やく ${Math.min(8,n)}もん</small></button>
-        <button class="optbtn" data-m="full">たっぷり<small>ぜんぶ ${n}もん</small></button>
-      </div>`;
   }
 
   app.innerHTML = `
@@ -986,8 +979,7 @@ function renderSetup(){
 
   app.querySelectorAll(".optbtn[data-g]").forEach(b=>b.onclick=()=>{ S.grade=+b.dataset.g; S.domain="all"; S.unitKey=null; gotoStep(2); });
   app.querySelectorAll(".optbtn[data-dom]").forEach(b=>b.onclick=()=>{ if(b.hasAttribute("disabled"))return; S.domain=b.dataset.dom; S.unitKey=null; gotoStep(3); });
-  app.querySelectorAll(".optbtn[data-unit]").forEach(b=>b.onclick=()=>{ const v=b.dataset.unit; S.unitKey = v==="__all__"?null:v; gotoStep(4); });
-  app.querySelectorAll(".optbtn[data-m]").forEach(b=>b.onclick=()=>{ S.mode=b.dataset.m; startDiagnostic(); });
+  app.querySelectorAll(".optbtn[data-unit]").forEach(b=>b.onclick=()=>{ const v=b.dataset.unit; S.unitKey = v==="__all__"?null:v; startDiagnostic(); });
   app.querySelectorAll(".crumb").forEach(c=>c.onclick=()=>gotoStep(+c.dataset.s));
   const bk=document.getElementById("backBtn"); if(bk) bk.onclick=()=>gotoStep(Math.max(1,S.homeStep-1));
   window.scrollTo(0,0);
@@ -1004,13 +996,12 @@ function candidateSkills(){
    しんだん キュー作成
    ================================================================ */
 function buildQueue(){
+  // 5問で判定：領域をまんべんなく 最大5スキル（少なければ ある分だけ）
   const all=candidateSkills();
-  if(S.mode==="full") return shuffle(all);
-  // さくっと：領域をまんべんなく 約8スキル
   const byDom={}; DOM_ORDER.forEach(d=>byDom[d]=[]);
   all.forEach(it=>byDom[it.dom].push(it));
   Object.keys(byDom).forEach(d=>byDom[d]=shuffle(byDom[d]));
-  const target=Math.min(8, all.length), out=[]; let added=true;
+  const target=Math.min(5, all.length), out=[]; let added=true;
   while(out.length<target && added){
     added=false;
     for(const d of DOM_ORDER){ if(byDom[d].length){ out.push(byDom[d].shift()); added=true; if(out.length>=target)break; } }
