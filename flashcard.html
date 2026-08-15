@@ -87,9 +87,11 @@
   .grp{display:flex;flex-direction:column;align-items:center;gap:5px;}
   .grp .n{font-size:clamp(18px,5vw,24px);font-weight:800;color:#5a4a4a;}
   .plus{font-size:clamp(26px,7vw,36px);font-weight:800;color:#5a4a4a;}
-  .dots{display:flex;flex-wrap:wrap;gap:3px;width:96px;justify-content:center;
+  .dots{display:inline-flex;flex-direction:column;gap:4px;
     background:#fff;border:2px solid #eef1f4;border-radius:10px;padding:5px;}
   .back .dots{border-color:#eaf6f1;}
+  .drow{display:flex;gap:3px;}                 /* 1だんは 5こまで */
+  .drow.top{margin-bottom:1px;}                /* 5この かたまりを すこし はっきり */
   .dot{width:15px;height:15px;border-radius:50%;background:var(--dot);}
 
   /* けっか モーダル */
@@ -242,8 +244,13 @@
 
   /* ---- ドット ---- */
   function dotsBox(n){
+    // 5こごとに だんを かえる（6こめから つぎの だん）
     var box=document.createElement('div'); box.className='dots';
-    for(var i=0;i<n;i++){ var d=document.createElement('div'); d.className='dot'; box.appendChild(d); }
+    var row=null;
+    for(var i=0;i<n;i++){
+      if(i%5===0){ row=document.createElement('div'); row.className='drow'+(n>5&&i===0?' top':''); box.appendChild(row); }
+      var d=document.createElement('div'); d.className='dot'; row.appendChild(d);
+    }
     return box;
   }
   function renderFrontDots(c){
