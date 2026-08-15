@@ -91,6 +91,9 @@
   .nbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #439a52;}
   .nbtn.used{opacity:.4;}
   .nbtn.bad{background:#e2574f;box-shadow:0 4px 0 #b23c35;animation:shake .4s;}
+  .numpad.lock{opacity:.45;pointer-events:none;filter:grayscale(.25);}
+  .retry{margin-top:16px;background:#ff8a3d;box-shadow:0 5px 0 #d76a20;font-size:clamp(18px,5vw,22px);animation:pop .3s;}
+  .retry:active{transform:translateY(4px);box-shadow:0 1px 0 #d76a20;}
 
   /* まちがい の ✕（しきの よこに すっきり） */
   .eq .mark{display:inline-block;margin-left:14px;color:#e2574f;font-weight:900;
@@ -151,6 +154,7 @@
       </div>
 
       <div class="numpad" id="numpad"></div>
+      <button class="btn retry hidden" id="retryBtn">🔄 もう いちど</button>
 
       <!-- せいかい -->
       <div class="overlay hidden" id="okOverlay">
@@ -178,7 +182,7 @@
   var scMenu=$('scMenu'), scGame=$('scGame');
   var gridEl=$('grid'), goalEl=$('goalline'), numpad=$('numpad');
   var TOTAL=10;
-  var target=3, current=1, score=0, qnum=1, answered=false;
+  var target=3, current=1, score=0, qnum=1, answered=false, locked=false;
 
   /* ---- サウンド ---- */
   var actx=null;
@@ -225,7 +229,9 @@
     }
   }
   function newQuestion(){
-    answered=false;
+    answered=false; locked=false;
+    numpad.classList.remove('lock');
+    $('retryBtn').classList.add('hidden');
     // 1 〜 target-1 の げんざいの かず
     current = 1 + Math.floor(Math.random()*(target-1 || 1));
     if(current>=target) current=target-1;
@@ -267,7 +273,7 @@
   }
 
   function check(v){
-    if(answered) return;
+    if(answered || locked) return;
     var correct=target-current;
     var ans=$('ans'), eq=$('eq');
     if(v===correct){
@@ -279,15 +285,16 @@
       $('okEq').innerHTML=current+' + <span style="color:#3fa84a">'+correct+'</span> = '+target;
       setTimeout(function(){ $('okOverlay').classList.remove('hidden'); }, correct*120+500);
     } else {
+      // まちがい：じどうで もどさず、「もう いちど」を おすまで とめる
+      locked=true;
       ans.textContent=v; ans.className='ng';
       renderDots(current, v);            // おした ぶんだけ ひょうじ（おおいと ゴールせんを こえる）
       eq.classList.add('shake'); sNG();
       showX();                           // あかい ✕ で「まちがい」を みせる
       var b=numpad.querySelector('.nbtn[data-v="'+v+'"]'); if(b) b.classList.add('bad');
-      setTimeout(function(){
-        eq.classList.remove('shake'); ans.textContent='？'; ans.className='q';
-        if(b) b.classList.remove('bad'); clearMark(); renderDots(current,0);
-      },1200);
+      setTimeout(function(){ eq.classList.remove('shake'); },500);
+      numpad.classList.add('lock');       // すうじパッドを ロック（れんだ ぼうし）
+      $('retryBtn').classList.remove('hidden');
     }
   }
   function nextQuestion(){
@@ -319,6 +326,16 @@
   }
 
   /* ---- ボタン ---- */
+  $('retryBtn').addEventListener('click',function(){
+    ac();
+    locked=false;
+    $('retryBtn').classList.add('hidden');
+    numpad.classList.remove('lock');
+    numpad.querySelectorAll('.nbtn').forEach(function(b){ b.classList.remove('bad','used'); });
+    var a=$('ans'); a.textContent='？'; a.className='q';
+    clearMark();
+    renderDots(current, 0);            // おなじ もんだいを もういちど
+  });
   $('continueBtn').addEventListener('click',function(){ ac(); nextQuestion(); });
   $('backMenu').addEventListener('click',function(){ ac(); show(scMenu); });
   $('toMenuWin').addEventListener('click',function(){ ac(); $('winOverlay').classList.add('hidden'); show(scMenu); });
