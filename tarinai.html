@@ -64,9 +64,9 @@
   .question b{color:var(--accent-d);font-size:1.25em;}
 
   /* まる トレイ（5フレーム）＋ はみ出し */
-  .traywrap{display:flex;align-items:flex-start;justify-content:center;}
+  .traywrap{display:inline-flex;flex-direction:column;align-items:flex-start;}
   .tray{background:#fff7e6;border:4px solid #ecd39c;border-radius:20px;padding:16px;
-    display:flex;flex-direction:column;align-items:center;gap:10px;min-width:170px;flex:none;}
+    display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:170px;flex:none;}
   .dots{display:inline-flex;flex-direction:column;gap:8px;align-items:flex-start;}
   .chunk{display:flex;gap:6px;background:#fff;border:2px dashed #e6c58f;border-radius:12px;padding:6px;}
   .chunk.five{border-style:solid;border-color:#d4a76a;background:#fffaf0;}
@@ -75,13 +75,11 @@
   .slot.on{border:none;background:var(--dot);}
   .slot.add{border:none;background:var(--add);animation:pop .35s;}
   @keyframes pop{0%{transform:scale(.4)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
-  /* わくから こぼれ出る まる（オレンジ） */
-  .spill{display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;width:118px;
-    margin-left:-14px;padding-top:16px;}
-  .oc{width:clamp(26px,7vw,34px);height:clamp(26px,7vw,34px);border-radius:50%;background:#ff8a3d;
-    box-shadow:0 2px 5px rgba(0,0,0,.18);animation:tumble .45s ease-out both;}
-  @keyframes tumble{0%{transform:translate(-22px,-18px) rotate(-30deg) scale(.4);opacity:0}
-    60%{opacity:1}100%{transform:translate(0,0) rotate(8deg) scale(1);opacity:1}}
+  /* わくの そと（した）へ つづけて こぼれる ぶん（オレンジ） */
+  .spill{display:inline-flex;flex-direction:column;gap:8px;align-items:flex-start;
+    padding-left:20px;margin-top:8px;}
+  .chunk.over{border-style:dashed;border-color:#ff8a3d;background:#fff3e8;}
+  .slot.over{border:none;background:#ff8a3d;animation:pop .35s both;}
 
   .eq{font-size:clamp(26px,7.5vw,40px);font-weight:800;color:#3a3a3a;margin:18px 0 6px;text-align:center;}
   .eq .q{color:var(--accent-d);} .eq .ok{color:#3fa84a;} .eq .ng{color:#e2574f;}
@@ -258,11 +256,18 @@
     renderSpill(Math.max(0, cur+blue-target));            // わくから はみ出した ぶん
   }
   function renderSpill(n){
+    // わくの した へ、5こずつ つづけて ならべる（ふつうの ながれ）
     spillEl.innerHTML='';
-    for(var i=0;i<n;i++){
-      var o=document.createElement('div'); o.className='oc';
-      o.style.animationDelay=(i*0.08)+'s';
-      spillEl.appendChild(o);
+    var made=0;
+    while(made<n){
+      var c=Math.min(5, n-made);
+      var chunk=document.createElement('div'); chunk.className='chunk over';
+      for(var i=0;i<c;i++){
+        var s=document.createElement('div'); s.className='slot over';
+        s.style.animationDelay=((made+i)*0.08)+'s';
+        chunk.appendChild(s);
+      }
+      spillEl.appendChild(chunk); made+=c;
     }
   }
 
