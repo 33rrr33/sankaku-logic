@@ -91,7 +91,8 @@
   .dots{display:inline-flex;flex-direction:column;gap:6px;}
   .chunk{display:flex;gap:3px;background:#fff;border:2px dashed #f0c2bc;border-radius:9px;padding:4px;}
   .chunk.five{border-style:solid;border-color:var(--dot);background:#fff2f0;}  /* 5そろった かたまり */
-  .dot{width:15px;height:15px;border-radius:50%;background:var(--dot);}
+  .slot{width:15px;height:15px;border-radius:50%;background:transparent;}      /* 5に たりない ぶんは くうはく */
+  .slot.on{background:var(--dot);}
 
   /* けっか モーダル */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;
@@ -249,7 +250,8 @@
     while(remaining>0){
       var c=Math.min(5,remaining);
       var chunk=document.createElement('div'); chunk.className='chunk'+(c===5?' five':'');
-      for(var i=0;i<c;i++){ var d=document.createElement('div'); d.className='dot'; chunk.appendChild(d); }
+      // いつも 5マス。たりない ぶんは くうはく（すきま）
+      for(var i=0;i<5;i++){ var d=document.createElement('div'); d.className='slot'+(i<c?' on':''); chunk.appendChild(d); }
       box.appendChild(chunk);
       remaining-=c;
     }
