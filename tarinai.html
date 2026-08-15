@@ -90,6 +90,19 @@
     box-shadow:0 4px 0 #439a52;transition:transform .05s;}
   .nbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #439a52;}
   .nbtn.used{opacity:.4;}
+  .nbtn.bad{background:#e2574f;box-shadow:0 4px 0 #b23c35;animation:shake .4s;}
+
+  /* まちがい の ✕ スタンプ（○✕ の ✕） */
+  .xstamp{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) rotate(-10deg) scale(.3);
+    font-size:clamp(110px,30vw,180px);font-weight:900;color:#e2574f;opacity:0;pointer-events:none;z-index:9;
+    text-shadow:0 0 0 #fff,0 4px 0 #fff,0 0 16px rgba(226,87,79,.35);}
+  .xstamp.show{animation:stamp 1.1s ease-out;}
+  @keyframes stamp{
+    0%{opacity:0;transform:translate(-50%,-50%) rotate(-10deg) scale(1.8)}
+    18%{opacity:1;transform:translate(-50%,-50%) rotate(-10deg) scale(1)}
+    22%{transform:translate(-50%,-50%) rotate(-10deg) scale(1.08)}
+    30%{transform:translate(-50%,-50%) rotate(-10deg) scale(1)}
+    80%{opacity:1}100%{opacity:0}}
 
   /* オーバーレイ */
   .overlay{position:absolute;inset:0;background:rgba(255,255,255,.94);display:flex;flex-direction:column;
@@ -131,6 +144,7 @@
     <div class="prow"><span>1</span><span id="qtotal">10もん</span></div>
 
     <div class="gamebox">
+      <div class="xstamp" id="xstamp">✕</div>
       <div class="question">
         <b id="target">3</b> に なるには、あと なんこ たりない？
       </div>
@@ -273,10 +287,14 @@
       setTimeout(function(){ $('okOverlay').classList.remove('hidden'); }, correct*120+500);
     } else {
       ans.textContent=v; ans.className='ng';
-      renderDots(current, v);            // おした ぶんだけ ひょうじ（おおいと はみ出す）
+      renderDots(current, v);            // おした ぶんだけ ひょうじ（おおいと ゴールせんを こえる）
       eq.classList.add('shake'); sNG();
-      var b=numpad.querySelector('.nbtn[data-v="'+v+'"]'); if(b) b.classList.add('used');
-      setTimeout(function(){ eq.classList.remove('shake'); ans.textContent='？'; ans.className='q'; renderDots(current,0); },1100);
+      showX();                           // あかい ✕ で「まちがい」を みせる
+      var b=numpad.querySelector('.nbtn[data-v="'+v+'"]'); if(b) b.classList.add('bad');
+      setTimeout(function(){
+        eq.classList.remove('shake'); ans.textContent='？'; ans.className='q';
+        if(b) b.classList.remove('bad'); renderDots(current,0);
+      },1200);
     }
   }
   function nextQuestion(){
@@ -286,6 +304,9 @@
   }
 
   /* ---- エフェクト ---- */
+  function showX(){
+    var x=$('xstamp'); x.classList.remove('show'); void x.offsetWidth; x.classList.add('show');
+  }
   function celebrate(){
     var ch=['🎉','⭐','✨','🌟','🎊']; var box=$('scGame').getBoundingClientRect();
     for(var i=0;i<10;i++){ var e=document.createElement('div'); e.className='star'; e.textContent=ch[Math.floor(Math.random()*ch.length)];
