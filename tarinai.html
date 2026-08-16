@@ -79,7 +79,7 @@
     font-size:20px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.2));}
 
   .eq{font-size:clamp(26px,7.5vw,40px);font-weight:800;color:#3a3a3a;margin:18px 0 6px;text-align:center;}
-  .eq .q{color:var(--accent-d);} .eq .ok{color:#3fa84a;} .eq .ng{color:#e2574f;}
+  .eq .q{color:var(--accent-d);} .eq .ok{color:#3fa84a;} .eq .ng{color:#e2574f;} .eq .sel{color:#2f9e4a;}
   .eq.shake{animation:shake .5s;}
   @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 
@@ -91,7 +91,11 @@
   .nbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #439a52;}
   .nbtn.used{opacity:.4;}
   .nbtn.bad{background:#e2574f;box-shadow:0 4px 0 #b23c35;animation:shake .4s;}
+  .nbtn.sel{background:#2f9e4a;box-shadow:0 0 0 4px #ffd257,0 4px 0 #257a3b;transform:translateY(1px);}
   .numpad.lock{opacity:.45;pointer-events:none;filter:grayscale(.25);}
+  .confirm{margin-top:16px;background:var(--accent);box-shadow:0 5px 0 var(--accent-d);
+    font-size:clamp(18px,5vw,22px);animation:pop .3s;}
+  .confirm:active{transform:translateY(4px);box-shadow:0 1px 0 var(--accent-d);}
   .retry{margin-top:16px;background:#ff8a3d;box-shadow:0 5px 0 #d76a20;font-size:clamp(18px,5vw,22px);animation:pop .3s;}
   .retry:active{transform:translateY(4px);box-shadow:0 1px 0 #d76a20;}
 
@@ -154,6 +158,7 @@
       </div>
 
       <div class="numpad" id="numpad"></div>
+      <button class="btn confirm hidden" id="confirmBtn">✔ これで よい？</button>
       <button class="btn retry hidden" id="retryBtn">🔄 もう いちど</button>
 
       <!-- せいかい -->
@@ -182,7 +187,7 @@
   var scMenu=$('scMenu'), scGame=$('scGame');
   var gridEl=$('grid'), goalEl=$('goalline'), numpad=$('numpad');
   var TOTAL=10;
-  var target=3, current=1, score=0, qnum=1, answered=false, locked=false;
+  var target=3, current=1, score=0, qnum=1, answered=false, locked=false, selected=null;
 
   /* ---- サウンド ---- */
   var actx=null;
@@ -216,22 +221,24 @@
     target=t; score=0; qnum=1;
     $('score').textContent='0'; $('qtotal').textContent=TOTAL+'もん';
     $('target').textContent=t; $('eqtar').textContent=t;
-    buildNumpad(t);
+    buildNumpad();
     show(scGame);
     newQuestion();
   }
-  function buildNumpad(t){
+  function buildNumpad(){
+    // いつも 0〜9（9の ボタンは つねに ある）
     numpad.innerHTML='';
-    for(var i=0;i<=t;i++){
+    for(var i=0;i<=9;i++){
       var b=document.createElement('button'); b.className='nbtn'; b.dataset.v=i; b.textContent=i;
-      b.addEventListener('click',function(){ ac(); check(parseInt(this.dataset.v,10)); });
+      b.addEventListener('click',function(){ ac(); pickNumber(parseInt(this.dataset.v,10)); });
       numpad.appendChild(b);
     }
   }
   function newQuestion(){
-    answered=false; locked=false;
+    answered=false; locked=false; selected=null;
     numpad.classList.remove('lock');
     $('retryBtn').classList.add('hidden');
+    $('confirmBtn').classList.add('hidden');
     // 1 〜 target-1 の げんざいの かず
     current = 1 + Math.floor(Math.random()*(target-1 || 1));
     if(current>=target) current=target-1;
@@ -241,7 +248,7 @@
     $('cur').textContent=current;
     var a=$('ans'); a.textContent='？'; a.className='q';
     clearMark();
-    numpad.querySelectorAll('.nbtn').forEach(function(b){ b.classList.remove('used','bad'); });
+    numpad.querySelectorAll('.nbtn').forEach(function(b){ b.classList.remove('used','bad','sel'); });
     renderDots(current, 0);
   }
   // まるを 5こずつ 一続きで ならべる。0..cur-1=あか、そのつぎ=あお。
@@ -272,15 +279,27 @@
     goalEl.style.height=(b.offsetHeight+12)+'px';
   }
 
-  function check(v){
+  // すうじを えらぶ（まだ はんてい しない＝ふりかえられる）
+  function pickNumber(v){
     if(answered || locked) return;
-    var correct=target-current;
-    var ans=$('ans'), eq=$('eq');
+    selected=v;
+    numpad.querySelectorAll('.nbtn').forEach(function(b){ b.classList.toggle('sel', +b.dataset.v===v); });
+    var a=$('ans'); a.textContent=v; a.className='sel';   // かりの こたえ
+    clearMark();
+    renderDots(current, v);                               // プレビュー（おおいと ゴールせんを こえる）
+    sPop();
+    $('confirmBtn').classList.remove('hidden');           // 「これで よい？」を みせる
+  }
+  // 「これで よい？」で はんてい
+  function judge(){
+    if(selected==null || answered || locked) return;
+    var v=selected, correct=target-current, ans=$('ans'), eq=$('eq');
+    $('confirmBtn').classList.add('hidden');
     if(v===correct){
       answered=true;
       ans.textContent=v; ans.className='ok';
       score+=10; $('score').textContent=score;
-      renderDots(current, correct);      // あきますを あおまるで うめる
+      renderDots(current, correct);
       sOK(); celebrate();
       $('okEq').innerHTML=current+' + <span style="color:#3fa84a">'+correct+'</span> = '+target;
       setTimeout(function(){ $('okOverlay').classList.remove('hidden'); }, correct*120+500);
@@ -288,12 +307,11 @@
       // まちがい：じどうで もどさず、「もう いちど」を おすまで とめる
       locked=true;
       ans.textContent=v; ans.className='ng';
-      renderDots(current, v);            // おした ぶんだけ ひょうじ（おおいと ゴールせんを こえる）
-      eq.classList.add('shake'); sNG();
-      showX();                           // あかい ✕ で「まちがい」を みせる
-      var b=numpad.querySelector('.nbtn[data-v="'+v+'"]'); if(b) b.classList.add('bad');
+      renderDots(current, v);
+      eq.classList.add('shake'); sNG(); showX();
+      var b=numpad.querySelector('.nbtn[data-v="'+v+'"]'); if(b){ b.classList.remove('sel'); b.classList.add('bad'); }
       setTimeout(function(){ eq.classList.remove('shake'); },500);
-      numpad.classList.add('lock');       // すうじパッドを ロック（れんだ ぼうし）
+      numpad.classList.add('lock');
       $('retryBtn').classList.remove('hidden');
     }
   }
@@ -326,15 +344,17 @@
   }
 
   /* ---- ボタン ---- */
+  $('confirmBtn').addEventListener('click',function(){ ac(); judge(); });
   $('retryBtn').addEventListener('click',function(){
     ac();
-    locked=false;
+    locked=false; selected=null;
     $('retryBtn').classList.add('hidden');
+    $('confirmBtn').classList.add('hidden');
     numpad.classList.remove('lock');
-    numpad.querySelectorAll('.nbtn').forEach(function(b){ b.classList.remove('bad','used'); });
+    numpad.querySelectorAll('.nbtn').forEach(function(b){ b.classList.remove('bad','used','sel'); });
     var a=$('ans'); a.textContent='？'; a.className='q';
     clearMark();
-    renderDots(current, 0);            // おなじ もんだいを もういちど
+    renderDots(current, 0);            // おなじ もんだいを もういちど（えらびなおし）
   });
   $('continueBtn').addEventListener('click',function(){ ac(); nextQuestion(); });
   $('backMenu').addEventListener('click',function(){ ac(); show(scMenu); });
