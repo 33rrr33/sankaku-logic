@@ -171,6 +171,11 @@
   .ansline{padding-left:32px;text-indent:0}
   .opts{margin:10px 0 0 32px;color:#333;font-size:16px;text-indent:0}
   .opt{display:inline-block;margin-right:18px;white-space:nowrap}
+  .answers{flex:none;border-top:2px dashed #cbd5e2;margin-top:12px;padding-top:8px;
+           font-size:14px;color:#333;line-height:2;font-variant-numeric:tabular-nums}
+  .answers .ans-label{display:inline-block;font-weight:800;color:var(--accent);margin-right:10px}
+  .answers .ans{display:inline-block;margin-right:16px;white-space:nowrap}
+  .answers .ans b{color:var(--accent);margin-right:5px}
 
   @media (max-width:600px){
     .quizlayout{flex-direction:column-reverse}
@@ -1278,7 +1283,7 @@ function renderWorksheet(){
   html += `<div class="qgrid${hasChoice?" one":""}">`;
   sd.problems.forEach((o,i)=>{
     const no=`<span class="no">${nums[i]||(i+1)}</span>`;
-    const ans=S.showAns?o.a:"&nbsp;";
+    const ans="&nbsp;"; // 問題欄は常に空欄。答えは下の「こたえ」欄に
     if(o.ch){
       const opts=`<div class="opts">`+o.ch.map((c,j)=>`<span class="opt">${labels[j]}. ${disp(c)}</span>`).join("")+`</div>`;
       html+=`<div class="q choice"><div class="qtext">${no}<span class="body">${disp(o.q)}</span><span class="write short">${ans}</span></div>${opts}</div>`;
@@ -1286,7 +1291,12 @@ function renderWorksheet(){
       html+=`<div class="q"><div class="qtext">${no}<span class="body">${disp(o.q)}</span></div><div class="ansline"><span class="write">${ans}</span></div></div>`;
     }
   });
-  html += `</div></div>`;
+  html += `</div>`; // qグリッドを閉じる
+  if(S.showAns){
+    html += `<div class="answers"><span class="ans-label">こたえ</span>`+
+      sd.problems.map((o,i)=>`<span class="ans"><b>${nums[i]||(i+1)}</b>${disp(o.a)}</span>`).join("")+`</div>`;
+  }
+  html += `</div>`; // .sheet を閉じる
 
   html += `<div class="wsbtns noprint">
       <button class="go big" id="printBtn">🖨 いんさつ / PDF</button>
