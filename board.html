@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>家族ボード</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#171b22; --panel2:#1d222b; --line:#2a3140;
+    --text:#eef2f7; --muted:#9aa7b8; --accent:#7fb2ff; --warn:#ffb454;
+    --ok:#77dd99; --pink:#ff8fb0;
+    --radius:22px; --gap:16px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+    font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+    -webkit-text-size-adjust:100%;overflow:hidden;}
+  #app{
+    height:100vh;height:100dvh;padding:var(--gap);gap:var(--gap);
+    display:grid;
+    grid-template-columns: 320px 1fr 340px;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "clock  calendar  memo"
+      "weather calendar photo";
+  }
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 20px;overflow:hidden;position:relative;}
+  .label{font-size:12px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin:0 0 8px;}
+
+  /* Clock */
+  #clock{grid-area:clock;display:flex;flex-direction:column;justify-content:center;}
+  #time{font-size:74px;font-weight:700;line-height:1;letter-spacing:.01em;
+    font-variant-numeric:tabular-nums;}
+  #time .sec{font-size:30px;color:var(--muted);margin-left:6px;}
+  #date{font-size:20px;color:var(--muted);margin-top:10px;}
+  #date .dow{color:var(--accent);font-weight:700;}
+  #date .dow.sat{color:var(--accent);} #date .dow.sun{color:var(--pink);}
+
+  /* Weather */
+  #weather{grid-area:weather;}
+  .wx-now{display:flex;align-items:center;gap:14px;}
+  .wx-ico{font-size:52px;line-height:1;}
+  .wx-temp{font-size:44px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .wx-desc{color:var(--muted);font-size:15px;margin-top:2px;}
+  .wx-fore{display:flex;gap:10px;margin-top:14px;}
+  .wx-day{flex:1;text-align:center;background:var(--panel2);border-radius:14px;padding:10px 4px;}
+  .wx-day .d{font-size:12px;color:var(--muted);}
+  .wx-day .i{font-size:26px;margin:4px 0;}
+  .wx-day .t{font-size:14px;font-variant-numeric:tabular-nums;}
+  .wx-day .t .lo{color:var(--muted);}
+
+  /* Calendar */
+  #calendar{grid-area:calendar;padding:0;display:flex;flex-direction:column;}
+  #calendar .chead{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;}
+  #calframe{flex:1;border:0;width:100%;background:#fff;border-radius:0 0 var(--radius) var(--radius);}
+  #calempty{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;
+    color:var(--muted);padding:24px;line-height:1.9;font-size:15px;}
+  #calempty code{background:var(--panel2);padding:2px 6px;border-radius:6px;color:var(--accent);}
+
+  /* Memo */
+  #memo{grid-area:memo;display:flex;flex-direction:column;}
+  .memo-head{display:flex;align-items:center;justify-content:space-between;}
+  #addBtn{background:var(--accent);color:#0b1220;border:0;border-radius:12px;
+    font-size:22px;width:38px;height:38px;font-weight:700;line-height:1;cursor:pointer;}
+  #memoList{list-style:none;margin:12px 0 0;padding:0;overflow-y:auto;flex:1;}
+  #memoList li{display:flex;align-items:flex-start;gap:10px;background:var(--panel2);
+    border-radius:14px;padding:12px 14px;margin-bottom:10px;font-size:17px;line-height:1.4;}
+  #memoList li.done{opacity:.45;text-decoration:line-through;}
+  #memoList .chk{font-size:22px;cursor:pointer;user-select:none;flex:none;}
+  #memoList .txt{flex:1;word-break:break-word;}
+  #memoList .del{color:var(--muted);cursor:pointer;font-size:18px;flex:none;padding:0 2px;}
+  .memo-empty{color:var(--muted);text-align:center;padding:20px;font-size:14px;}
+
+  /* Photo */
+  #photo{grid-area:photo;padding:0;}
+  #photo .ph-img{width:100%;height:100%;object-fit:cover;display:block;
+    transition:opacity 1s ease;border-radius:var(--radius);}
+  #photo .ph-empty{height:100%;display:flex;align-items:center;justify-content:center;
+    text-align:center;color:var(--muted);padding:20px;font-size:14px;line-height:1.8;}
+
+  /* settings gear */
+  #gear{position:fixed;right:10px;bottom:8px;font-size:16px;color:#3a4353;
+    cursor:pointer;padding:8px;z-index:20;}
+  #panel{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
+    align-items:center;justify-content:center;z-index:30;padding:20px;}
+  #panel.open{display:flex;}
+  #panelBox{background:var(--panel);border:1px solid var(--line);border-radius:20px;
+    padding:24px;width:min(560px,100%);max-height:88vh;overflow:auto;}
+  #panelBox h2{margin:0 0 4px;font-size:20px;}
+  #panelBox p.hint{color:var(--muted);font-size:13px;line-height:1.7;margin:0 0 18px;}
+  #panelBox label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px;}
+  #panelBox input,#panelBox textarea{width:100%;background:var(--panel2);border:1px solid var(--line);
+    color:var(--text);border-radius:12px;padding:12px 14px;font-size:15px;font-family:inherit;}
+  #panelBox textarea{min-height:88px;resize:vertical;}
+  .row2{display:flex;gap:12px;} .row2>div{flex:1;}
+  .btns{display:flex;gap:12px;margin-top:22px;}
+  .btns button{flex:1;padding:14px;border-radius:14px;border:0;font-size:16px;font-weight:700;cursor:pointer;}
+  #save{background:var(--accent);color:#0b1220;} #close{background:var(--panel2);color:var(--text);}
+
+  @media (max-width:900px){
+    #app{grid-template-columns:1fr 1fr;grid-template-rows:auto auto 1fr auto;
+      grid-template-areas:"clock weather" "calendar calendar" "memo memo" "photo photo";}
+    #time{font-size:56px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <section class="card" id="clock">
+    <div id="time">--:--</div>
+    <div id="date">読み込み中…</div>
+  </section>
+
+  <section class="card" id="weather">
+    <p class="label">天気</p>
+    <div class="wx-now"><div class="wx-ico" id="wxIco">⛅</div>
+      <div><div class="wx-temp" id="wxTemp">--°</div><div class="wx-desc" id="wxDesc">読み込み中…</div></div>
+    </div>
+    <div class="wx-fore" id="wxFore"></div>
+  </section>
+
+  <section class="card" id="calendar">
+    <div class="chead"><p class="label" style="margin:0">カレンダー</p></div>
+    <iframe id="calframe" title="家族カレンダー" style="display:none"></iframe>
+    <div id="calempty">
+      右下の ⚙ から<br><b>カレンダーの埋め込みURL</b>を設定してね<br><br>
+      Googleカレンダー → 設定 → 予定の共有 →<br>「このカレンダーを埋め込む」の <code>src="..."</code> を貼り付け
+    </div>
+  </section>
+
+  <section class="card" id="memo">
+    <div class="memo-head"><p class="label" style="margin:0">伝言・やること</p>
+      <button id="addBtn" title="追加">＋</button></div>
+    <ul id="memoList"></ul>
+  </section>
+
+  <section class="card" id="photo">
+    <div class="ph-empty" id="phEmpty">⚙ から写真のURLを<br>追加すると<br>スライドショーになります</div>
+  </section>
+</div>
+
+<div id="gear">⚙ 設定</div>
+<div id="panel"><div id="panelBox">
+  <h2>ボードの設定</h2>
+  <p class="hint">この端末に保存されます(共有ではありません)。設定後「保存」を押してください。</p>
+
+  <label>カレンダー 埋め込みURL(iframeの src）</label>
+  <textarea id="cfgCal" placeholder="https://calendar.google.com/calendar/embed?src=..."></textarea>
+
+  <div class="row2">
+    <div><label>天気:緯度</label><input id="cfgLat" placeholder="34.69 (大阪)"></div>
+    <div><label>天気:経度</label><input id="cfgLon" placeholder="135.50"></div>
+  </div>
+  <button id="geoBtn" style="margin-top:10px;background:var(--panel2);color:var(--text);border:0;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:13px;">現在地から自動入力</button>
+
+  <label>写真URL(1行に1つ）</label>
+  <textarea id="cfgPhotos" placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg"></textarea>
+
+  <div class="btns"><button id="close">閉じる</button><button id="save">保存</button></div>
+</div></div>
+
+<script>
+(function(){
+  "use strict";
+  var LS = "familyBoard.v1";
+  var cfg = load();
+
+  function load(){
+    try{ return Object.assign({cal:"",lat:"",lon:"",photos:[],memos:[]}, JSON.parse(localStorage.getItem(LS)||"{}")); }
+    catch(e){ return {cal:"",lat:"",lon:"",photos:[],memos:[]}; }
+  }
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify(cfg)); }catch(e){} }
+  var $=function(id){return document.getElementById(id);};
+
+  /* ---------- 時計 ---------- */
+  var DOW=["日","月","火","水","木","金","土"];
+  function tick(){
+    var d=new Date();
+    var hh=String(d.getHours()).padStart(2,"0"), mm=String(d.getMinutes()).padStart(2,"0"),
+        ss=String(d.getSeconds()).padStart(2,"0");
+    $("time").innerHTML=hh+":"+mm+'<span class="sec">'+ss+'</span>';
+    var dn=d.getDay(), cls=dn===0?"sun":dn===6?"sat":"";
+    $("date").innerHTML=(d.getMonth()+1)+"月"+d.getDate()+"日 "+
+      '<span class="dow '+cls+'">('+DOW[dn]+')</span>';
+  }
+  setInterval(tick,1000); tick();
+
+  /* ---------- 天気 (Open-Meteo, APIキー不要) ---------- */
+  var WMO={0:["☀️","快晴"],1:["🌤️","晴れ"],2:["⛅","くもり時々晴れ"],3:["☁️","くもり"],
+    45:["🌫️","霧"],48:["🌫️","霧"],51:["🌦️","霧雨"],53:["🌦️","霧雨"],55:["🌦️","霧雨"],
+    61:["🌧️","小雨"],63:["🌧️","雨"],65:["🌧️","大雨"],71:["🌨️","小雪"],73:["🌨️","雪"],
+    75:["❄️","大雪"],80:["🌦️","にわか雨"],81:["🌧️","にわか雨"],82:["⛈️","激しい雨"],
+    95:["⛈️","雷雨"],96:["⛈️","雷雨"],99:["⛈️","雷雨"]};
+  function wmo(c){return WMO[c]||["🌡️","―"];}
+  function loadWeather(){
+    if(!cfg.lat||!cfg.lon){ $("wxDesc").textContent="⚙ から地点を設定してね"; $("wxTemp").textContent="--°"; return; }
+    var u="https://api.open-meteo.com/v1/forecast?latitude="+cfg.lat+"&longitude="+cfg.lon+
+      "&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min"+
+      "&timezone=auto&forecast_days=4";
+    fetch(u).then(function(r){return r.json();}).then(function(j){
+      var cw=wmo(j.current.weather_code);
+      $("wxIco").textContent=cw[0]; $("wxDesc").textContent=cw[1];
+      $("wxTemp").textContent=Math.round(j.current.temperature_2m)+"°";
+      var f=$("wxFore"); f.innerHTML="";
+      for(var i=1;i<j.daily.time.length;i++){
+        var dt=new Date(j.daily.time[i]), w=wmo(j.daily.weather_code[i]);
+        var el=document.createElement("div"); el.className="wx-day";
+        el.innerHTML='<div class="d">'+(dt.getMonth()+1)+"/"+dt.getDate()+"("+DOW[dt.getDay()]+')</div>'+
+          '<div class="i">'+w[0]+'</div><div class="t">'+Math.round(j.daily.temperature_2m_max[i])+
+          '° <span class="lo">'+Math.round(j.daily.temperature_2m_min[i])+"°</span></div>";
+        f.appendChild(el);
+      }
+    }).catch(function(){ $("wxDesc").textContent="天気の取得に失敗"; });
+  }
+
+  /* ---------- カレンダー ---------- */
+  function loadCal(){
+    if(cfg.cal){ $("calframe").src=cfg.cal; $("calframe").style.display="block"; $("calempty").style.display="none"; }
+    else{ $("calframe").style.display="none"; $("calempty").style.display="flex"; }
+  }
+
+  /* ---------- 写真スライド ---------- */
+  var phIdx=0, phTimer=null;
+  function loadPhotos(){
+    var box=$("photo"); box.innerHTML="";
+    if(!cfg.photos.length){
+      box.innerHTML='<div class="ph-empty" id="phEmpty">⚙ から写真のURLを<br>追加すると<br>スライドショーになります</div>';
+      if(phTimer){clearInterval(phTimer);phTimer=null;} return;
+    }
+    var img=document.createElement("img"); img.className="ph-img"; box.appendChild(img);
+    phIdx=0; showPhoto(img);
+    if(phTimer)clearInterval(phTimer);
+    phTimer=setInterval(function(){ phIdx=(phIdx+1)%cfg.photos.length; showPhoto(img); }, 8000);
+  }
+  function showPhoto(img){ img.style.opacity=0;
+    setTimeout(function(){ img.src=cfg.photos[phIdx]; img.onload=function(){img.style.opacity=1;}; },300); }
+
+  /* ---------- 伝言メモ ---------- */
+  function renderMemo(){
+    var ul=$("memoList"); ul.innerHTML="";
+    if(!cfg.memos.length){ ul.innerHTML='<div class="memo-empty">＋ で伝言や<br>やることを追加</div>'; return; }
+    cfg.memos.forEach(function(m,i){
+      var li=document.createElement("li"); if(m.done)li.className="done";
+      var chk=document.createElement("span"); chk.className="chk"; chk.textContent=m.done?"☑️":"⬜️";
+      chk.onclick=function(){ cfg.memos[i].done=!cfg.memos[i].done; save(); renderMemo(); };
+      var txt=document.createElement("span"); txt.className="txt"; txt.textContent=m.text;
+      var del=document.createElement("span"); del.className="del"; del.textContent="✕";
+      del.onclick=function(){ cfg.memos.splice(i,1); save(); renderMemo(); };
+      li.appendChild(chk); li.appendChild(txt); li.appendChild(del); ul.appendChild(li);
+    });
+  }
+  $("addBtn").onclick=function(){
+    var t=prompt("伝言・やることを入力");
+    if(t&&t.trim()){ cfg.memos.push({text:t.trim(),done:false}); save(); renderMemo(); }
+  };
+
+  /* ---------- 設定パネル ---------- */
+  function openPanel(){
+    $("cfgCal").value=cfg.cal; $("cfgLat").value=cfg.lat; $("cfgLon").value=cfg.lon;
+    $("cfgPhotos").value=(cfg.photos||[]).join("\n");
+    $("panel").classList.add("open");
+  }
+  $("gear").onclick=openPanel;
+  $("close").onclick=function(){ $("panel").classList.remove("open"); };
+  $("geoBtn").onclick=function(){
+    if(!navigator.geolocation){ alert("この端末では現在地を取得できません"); return; }
+    navigator.geolocation.getCurrentPosition(function(p){
+      $("cfgLat").value=p.coords.latitude.toFixed(2); $("cfgLon").value=p.coords.longitude.toFixed(2);
+    }, function(){ alert("現在地の取得に失敗しました"); });
+  };
+  $("save").onclick=function(){
+    cfg.cal=$("cfgCal").value.trim();
+    // src="..." を貼られた場合は中身だけ取り出す
+    var m=cfg.cal.match(/src=["']([^"']+)["']/); if(m)cfg.cal=m[1];
+    cfg.lat=$("cfgLat").value.trim(); cfg.lon=$("cfgLon").value.trim();
+    cfg.photos=$("cfgPhotos").value.split("\n").map(function(s){return s.trim();}).filter(Boolean);
+    save(); $("panel").classList.remove("open");
+    loadCal(); loadWeather(); loadPhotos();
+  };
+
+  /* ---------- 起動 ---------- */
+  loadCal(); loadWeather(); loadPhotos(); renderMemo();
+  setInterval(loadWeather, 30*60*1000); // 30分ごとに天気更新
+})();
+</script>
+</body>
+</html>
