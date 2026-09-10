@@ -1,0 +1,61 @@
+{
+  "publisher": "日刊ロジック100円文庫",
+  "price": 100,
+  "issues": [
+    {
+      "date": "2026-09-12",
+      "number": 619,
+      "title": "「他人と比べるべきか」を例に学ぶ、So What? / Why So?（縦の論理）の使い方【1日1論理】",
+      "theme": "compare",
+      "framework": "sowhat",
+      "price": 100,
+      "tags": [
+        "自己肯定感",
+        "メンタル",
+        "成長",
+        "論理的思考",
+        "三角ロジック",
+        "毎日note"
+      ],
+      "file": "notes/2026-09-12.md",
+      "posted_to_note": false
+    },
+    {
+      "date": "2026-09-11",
+      "number": 618,
+      "title": "「文章は書き直すべきか」を例に学ぶ、反論処理（先回り論法）の使い方【1日1論理】",
+      "theme": "firstdraft",
+      "framework": "rebuttal",
+      "price": 100,
+      "tags": [
+        "文章術",
+        "ライティング",
+        "伝え方",
+        "論理的思考",
+        "三角ロジック",
+        "毎日note"
+      ],
+      "file": "notes/2026-09-11.md",
+      "posted_to_note": false
+    },
+    {
+      "date": "2026-09-10",
+      "number": 617,
+      "title": "なぜあなたの意見は流されるのか？「サブスクは見直すべきか」をPREP法で組み立て直す",
+      "theme": "subscription",
+      "framework": "prep",
+      "price": 100,
+      "tags": [
+        "サブスク",
+        "節約",
+        "家計",
+        "論理的思考",
+        "三角ロジック",
+        "毎日note"
+      ],
+      "file": "notes/2026-09-10.md",
+      "posted_to_note": false
+    }
+  ],
+  "updated_at": "2026-09-10T12:41:07.436Z"
+}

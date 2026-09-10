@@ -1,0 +1,4 @@
+node_modules/
+# note.com のログイン状態やスクショはコミットしない（機微情報）
+src/publish/.note-state.json
+src/publish/.last-post-*.png

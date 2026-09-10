@@ -1,0 +1,23 @@
+{
+  "name": "nikkan-logic-note-factory",
+  "version": "1.0.0",
+  "private": true,
+  "description": "日刊ロジック100円文庫 — 100円noteを1日1本、自動で作り続ける全自動出版社",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "today": "node src/cli.js today",
+    "preview": "node src/cli.js preview",
+    "build": "node src/cli.js build",
+    "list": "node src/cli.js list",
+    "index": "node scripts/build-index.js",
+    "test": "node test/generate.test.js",
+    "note:login": "node src/publish/note-publisher.js login",
+    "note:post": "node src/publish/note-publisher.js post"
+  },
+  "optionalDependencies": {
+    "playwright": "^1.47.0"
+  }
+}
