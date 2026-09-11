@@ -10,6 +10,7 @@
   "scripts": {
     "today": "node src/cli.js today",
     "preview": "node src/cli.js preview",
+    "paste": "node src/cli.js paste",
     "build": "node src/cli.js build",
     "list": "node src/cli.js list",
     "index": "node scripts/build-index.js",

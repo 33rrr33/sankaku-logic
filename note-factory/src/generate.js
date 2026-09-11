@@ -49,6 +49,12 @@ function generate(dateStr) {
   const stepsMd = fw.steps.map((s) => `- ${s}`).join('\n');
   const drillQ = fill(drill.q, { weak: theme.weak, claim: theme.claim });
 
+  // 「売れる要素」を人間が足すための記入欄（投稿前に書き換える前提）
+  const claimShort = theme.claim.replace(/[。．]$/, '');
+  const personalizeMd = snip.personalizeBlocks
+    .map((b) => `## ${b.heading}\n\n${fill(b.prompt, { claimShort })}`)
+    .join('\n\n');
+
   // ----- 本文（無料パート） --------------------------------------------------
   const freeBody = [
     `> ${subtitle}`,
@@ -99,6 +105,8 @@ function generate(dateStr) {
     '',
     deepTip,
     '',
+    personalizeMd,
+    '',
     '## 今日の練習問題',
     '',
     drillQ,
@@ -131,6 +139,8 @@ function generate(dateStr) {
     bodyMarkdown,
     // note貼り付け用のプレーンタイトル（【】等は残す）
     plainTitle: title,
+    // 投稿前チェックリスト（人間が5分で足す作業の手引き）
+    checklist: snip.preflightChecklist,
   };
 }
 

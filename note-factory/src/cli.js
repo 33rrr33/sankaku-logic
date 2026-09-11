@@ -62,7 +62,29 @@ function renderFileContent(note) {
     '---',
     '',
   ].join('\n');
-  return fm + `# ${note.plainTitle}\n\n` + note.bodyMarkdown + '\n';
+  const checklist = '<!--\n' + note.checklist.join('\n') + '\n-->\n\n';
+  return fm + checklist + `# ${note.plainTitle}\n\n` + note.bodyMarkdown + '\n';
+}
+
+// note貼り付け用のクリーンテキスト（front-matter無し・チェックリストは別表示）
+function renderPaste(note) {
+  const line = '━'.repeat(56);
+  return [
+    line,
+    `📋 noteに貼り付ける前に、まずこの3つを5分で（← 売れる分かれ目）`,
+    line,
+    note.checklist.join('\n'),
+    '',
+    `${line}\n📝 ここから下をコピーして note の下書きに貼る\n${line}`,
+    '',
+    note.plainTitle,
+    '',
+    note.bodyMarkdown.replace(/<!--.*?-->/g, '（↑ここまで無料 / ここから有料¥100）'),
+    '',
+    line,
+    `🏷 タグ候補: ${note.tags.map((t) => '#' + t).join(' ')}   💴 価格: ¥${note.price}`,
+    line,
+  ].join('\n');
 }
 
 function loadIndex() {
@@ -129,6 +151,12 @@ function main() {
       console.log(renderPlain(generate(date)));
       break;
     }
+    case 'paste': {
+      // note に貼り付ける用のクリーン出力＋投稿前チェックリスト
+      const date = arg || todayJST();
+      console.log(renderPaste(generate(date)));
+      break;
+    }
     case 'build': {
       const date = arg || todayJST();
       const { note, file, isNew } = build(date);
@@ -142,7 +170,7 @@ function main() {
       break;
     default:
       console.error(`不明なコマンド: ${cmd}`);
-      console.error('使い方: today | preview [date] | build [date] | list');
+      console.error('使い方: today | preview [date] | paste [date] | build [date] | list');
       process.exit(1);
   }
 }
