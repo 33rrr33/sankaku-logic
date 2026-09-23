@@ -122,8 +122,8 @@ function generate(dateStr) {
 
   const bodyMarkdown = freeBody + '\n\n<!-- ここから有料（¥' + PRICE + '）ライン -->\n' + paidBody;
 
-  // タグ（テーマ由来＋固定）
-  const tags = Array.from(new Set([...theme.tags, '論理的思考', '三角ロジック', '毎日note']));
+  // タグ（テーマ由来＋固定）。固定分は分野に依らず使える汎用タグにする。
+  const tags = Array.from(new Set([...theme.tags, '論理的思考', '伝え方', '毎日note']));
 
   return {
     date: dateStr,

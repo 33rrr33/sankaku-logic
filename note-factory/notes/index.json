@@ -3,59 +3,59 @@
   "price": 100,
   "issues": [
     {
-      "date": "2026-09-12",
-      "number": 619,
-      "title": "「他人と比べるべきか」を例に学ぶ、So What? / Why So?（縦の論理）の使い方【1日1論理】",
-      "theme": "compare",
-      "framework": "sowhat",
+      "date": "2026-09-23",
+      "number": 630,
+      "title": "三角ロジックで考える「学びは出す前提にすべきか」──たった3行で伝わる話し方",
+      "theme": "output",
+      "framework": "triangle",
       "price": 100,
       "tags": [
-        "自己肯定感",
-        "メンタル",
-        "成長",
+        "勉強法",
+        "アウトプット",
+        "スキルアップ",
         "論理的思考",
-        "三角ロジック",
-        "毎日note"
-      ],
-      "file": "notes/2026-09-12.md",
-      "posted_to_note": false
-    },
-    {
-      "date": "2026-09-11",
-      "number": 618,
-      "title": "「文章は書き直すべきか」を例に学ぶ、反論処理（先回り論法）の使い方【1日1論理】",
-      "theme": "firstdraft",
-      "framework": "rebuttal",
-      "price": 100,
-      "tags": [
-        "文章術",
-        "ライティング",
         "伝え方",
-        "論理的思考",
-        "三角ロジック",
         "毎日note"
       ],
-      "file": "notes/2026-09-11.md",
+      "file": "notes/2026-09-23.md",
       "posted_to_note": false
     },
     {
-      "date": "2026-09-10",
-      "number": 617,
-      "title": "なぜあなたの意見は流されるのか？「サブスクは見直すべきか」をPREP法で組み立て直す",
-      "theme": "subscription",
-      "framework": "prep",
+      "date": "2026-09-22",
+      "number": 629,
+      "title": "なぜあなたの意見は流されるのか？「完璧を目指すべきか」をトゥールミン・モデルで組み立て直す",
+      "theme": "draft60",
+      "framework": "toulmin",
       "price": 100,
       "tags": [
-        "サブスク",
-        "節約",
-        "家計",
+        "仕事術",
+        "完璧主義",
+        "生産性",
         "論理的思考",
-        "三角ロジック",
+        "伝え方",
         "毎日note"
       ],
-      "file": "notes/2026-09-10.md",
+      "file": "notes/2026-09-22.md",
+      "posted_to_note": false
+    },
+    {
+      "date": "2026-09-21",
+      "number": 628,
+      "title": "MECE（横の論理）で考える「頼まれごとは断ってよいか」──たった3行で伝わる話し方",
+      "theme": "sayno",
+      "framework": "mece",
+      "price": 100,
+      "tags": [
+        "断り方",
+        "仕事術",
+        "人間関係",
+        "論理的思考",
+        "伝え方",
+        "毎日note"
+      ],
+      "file": "notes/2026-09-21.md",
       "posted_to_note": false
     }
   ],
-  "updated_at": "2026-09-11T12:13:54.334Z"
+  "updated_at": "2026-09-23T05:11:04.204Z"
 }
